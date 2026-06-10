@@ -520,7 +520,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     shutil.copy(TEMPLATE_PATH, filepath)
     doc = Document(filepath)
 
-    # PASS 1: Apply all INSERT_ replacements
+    # ── PASS 1: Apply all INSERT_ replacements ──────────────────
     for para in all_paras(doc):
         hrs = [r for r in para.runs if r.font.highlight_color is not None]
         if not hrs:
@@ -543,14 +543,14 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             elif "INSERT_" in (r.text or ""):
                 replace_multi_placeholder_run(r, replacements)
 
-    # PASS 2: Clear ALL remaining highlights
+    # ── PASS 2: Clear ALL remaining highlights ──────────────────
     for para in all_paras(doc):
         for r in para.runs:
             if r.font.highlight_color is not None:
                 clear_highlight(r)
                 r.font.highlight_color = None
 
-    # PASS 3: Firm style patches
+    # ── PASS 3: Firm style patches ──────────────────────────────
     if is_firm:
         for para in all_paras(doc):
             if para.text.strip().startswith("The offer currency is"):
@@ -589,30 +589,28 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         r.text = ""
                 break
 
-  # PASS 4: Cancellation table patch
-if is_firm:
-    val_for_90 = "-90%" if cancel_rate_90 else "-80%"
-    cancel_map = {"5%": "-5%", "45%": "-45%", "90%": val_for_90, "100%": "-100%"}
+    # ── PASS 4: Cancellation table patch ───────────────────────
+    if is_firm:
+        val_for_90 = "-90%" if cancel_rate_90 else "-80%"
+        cancel_map = {"5%": "-5%", "45%": "-45%", "90%": val_for_90, "100%": "-100%"}
+        cancel_table = doc.tables[3]
+        target_col = 2
+        for row in cancel_table.rows:
+            cell = row.cells[target_col]
+            for para in cell.paragraphs:
+                t = para.text.strip()
+                if t in cancel_map:
+                    for r in para.runs:
+                        if r.text.strip() in cancel_map:
+                            r.text = r.text.replace(r.text.strip(), cancel_map[r.text.strip()])
 
-    cancel_table = doc.tables[3]  # cancellation table is always index 3
-    target_col = 2                # "Cancellation" column
-
-    for row in cancel_table.rows:
-        cell = row.cells[target_col]
-        for para in cell.paragraphs:
-            t = para.text.strip()
-            if t in cancel_map:
-                for r in para.runs:
-                    if r.text.strip() in cancel_map:
-                        r.text = r.text.replace(r.text.strip(), cancel_map[r.text.strip()])
-
-    # PASS 5: Scope tables
+    # ── PASS 5: Scope tables ────────────────────────────────────
     if len(doc.tables) > 1:
         fill_table(doc.tables[1], scope_items)
     if optional_items and len(doc.tables) > 2:
         fill_table(doc.tables[2], optional_items)
 
-    # PASS 6: Final cleanup
+    # ── PASS 6: Final cleanup ───────────────────────────────────
     for para in all_paras(doc):
         for r in para.runs:
             if r.text and "INSERT_" in r.text:
