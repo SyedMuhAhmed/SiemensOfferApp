@@ -142,10 +142,8 @@ col7, col8 = st.columns(2)
 with col7:
     customer_tel = st.text_input("Tel (or leave blank)")
 with col8:
-    if not is_firm:
-        customer_mob = st.text_input("Mobile (or leave blank)")
-    else:
-        customer_mob = ""
+    # Mobile shown for BOTH Firm and Budgetary
+    customer_mob = st.text_input("Mobile (or leave blank)")
 
 col9, col10 = st.columns(2)
 with col9:
@@ -227,7 +225,7 @@ else:
 if is_firm:
     cancel_high = st.selectbox(
         "Cancellation Charge (high bracket)",
-        ["-80%", "-90%"],
+        ["80%", "90%"],
         help="Select -80% for National customers, -90% for International / Siemens Energy / Critical Country"
     )
 else:
