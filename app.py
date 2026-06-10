@@ -150,16 +150,16 @@ with col5:
 with col6:
     customer_fax = st.text_input("Fax (or leave blank)")
 
-# Tel and Mobile row - Mobile only shows for Budgetary
-if is_budgetary:
-    col7, col8 = st.columns(2)
-    with col7:
-        customer_tel = st.text_input("Tel (e.g. +971 2 6262 800 Ext:33, or leave blank)")
-    with col8:
-        customer_mob = st.text_input("Mobile (or leave blank)")
-else:
+# Tel and Mobile row — Tel always in col7; Mobile shown in col8 for Budgetary only
+col7, col8 = st.columns(2)
+with col7:
     customer_tel = st.text_input("Tel (e.g. +971 2 6262 800 Ext:33, or leave blank)")
-    customer_mob = ""
+with col8:
+    if is_budgetary:
+        customer_mob = st.text_input("Mobile (or leave blank)")
+    else:
+        customer_mob = ""
+        st.empty()  # keeps layout balanced for Firm
 
 col9, col10 = st.columns(2)
 with col9:
