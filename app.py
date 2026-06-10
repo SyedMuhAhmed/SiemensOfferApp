@@ -71,8 +71,11 @@ def fill(run, text):
     clear_highlight(run)
 
 def all_paras(doc):
+    """Yield every paragraph in the document body, all tables, AND all headers."""
     from docx.text.paragraph import Paragraph
     from docx.table import Table
+
+    # ── Body ──────────────────────────────────────────────────
     for elem in doc.element.body:
         tag = elem.tag.split("}")[-1]
         if tag == "p":
@@ -83,12 +86,70 @@ def all_paras(doc):
                     for p in cell.paragraphs:
                         yield p
 
+    # ── Headers (covers running header on page 2+) ────────────
+    for section in doc.sections:
+        for hdr in [section.header, section.first_page_header, section.even_page_header]:
+            if hdr is None:
+                continue
+            for p in hdr.paragraphs:
+                yield p
+            for tbl in hdr.tables:
+                for row in tbl.rows:
+                    for cell in row.cells:
+                        for p in cell.paragraphs:
+                            yield p
+
+def merge_and_replace(para, replacements):
+    """
+    Merge adjacent highlighted runs whose combined text matches a key,
+    then apply replacements. Handles split tokens like INSERT_SENDER_ + EMAIL
+    and INSERT + _END_USER.
+    """
+    runs = para.runs
+    if not runs:
+        return
+
+    # ── Step 1: merge adjacent HL runs until combined key is found ──
+    changed = True
+    while changed:
+        changed = False
+        runs = para.runs
+        for i in range(len(runs) - 1):
+            r0, r1 = runs[i], runs[i + 1]
+            if r0.font.highlight_color is not None and r1.font.highlight_color is not None:
+                combined = (r0.text or "") + (r1.text or "")
+                if combined.strip() in replacements or "INSERT_" in combined:
+                    r0.text = combined
+                    r1.text = ""
+                    clear_highlight(r1)
+                    r1.font.highlight_color = None
+                    changed = True
+                    break
+
+    # ── Step 2: replace exact-match highlighted runs ──────────────
+    for r in para.runs:
+        if not r.text:
+            continue
+        key = r.text.strip()
+        if r.font.highlight_color is not None:
+            if key in replacements:
+                fill(r, replacements[key])
+            elif "INSERT_" in r.text:
+                # inline substitution (e.g. "END USER:  INSERT_END_USER")
+                new_text = re.sub(
+                    r"INSERT_\w+",
+                    lambda m: replacements.get(m.group(0), ""),
+                    r.text
+                )
+                fill(r, new_text)
+
 def fill_table(table, items):
     for ri, item in enumerate(items):
         while ri + 1 >= len(table.rows):
             table.add_row()
         row = table.rows[ri + 1]
-        vals = [item.get("no", str(ri+1)), item.get("desc", ""), item.get("qty", ""), item.get("total", "")]
+        vals = [item.get("no", str(ri + 1)), item.get("desc", ""),
+                item.get("qty", ""), item.get("total", "")]
         for ci, val in enumerate(vals):
             if ci < len(row.cells):
                 p = row.cells[ci].paragraphs[0]
@@ -232,7 +293,6 @@ elif payment_option_sel.startswith("Option B"):
         payment_days = st.text_input("Enter days", key="pd_B_custom") if payment_days_sel == "Other" else payment_days_sel
 
 else:
-    # Option C — Custom
     payment_option = "C"
     custom_payment_text = st.text_area(
         "Enter custom payment terms",
@@ -251,7 +311,7 @@ else:
             "Payment Days (for header)",
             payment_days_options,
             key="pd_C",
-            help="Used in the section header line only — e.g. 'Payment terms: 90 days'",
+            help="Used in the section header line only",
         )
         payment_days = (
             st.text_input("Enter days", key="pd_C_custom")
@@ -428,7 +488,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             f"(Bill of Lading), payable within {payment_days} days."
         )
     else:
-        # Option C — verbatim custom text
         pay_header = f"Payment terms: {payment_days} days from delivery documents"
         pay_lines  = custom_payment_text.strip()
 
@@ -447,38 +506,46 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     price_words_run = f"{currency_code} {total_price_words} Only)."
 
     # ── Replacements map ─────────────────────────────────────
+    # Keys must exactly match the INSERT_ token(s) as they appear in the template
     replacements = {
-        "INSERT_CUSTOMER_COMPANY":                  customer_company,
-        "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM":     po_box_full,
-        "INSERT_CUSTOMER_CITY_FULL":                customer_city,
-        "INSERT_CUSTOMER_ATTN":                     f"Kind Attn: {customer_attn}",
-        "INSERT_CUSTOMER_TEL_LINE":                 tel_str,
-        "INSERT_CUSTOMER_FAX_LINE":                 fax_str,
-        "INSERT_CUSTOMER_MOB_LINE":                 mob_str,
-        "INSERT_SENDER_NAME":                       sender_name,
-        "INSERT_SENDER_DEPT":                       sender_dept,
-        "INSERT_SENDER_MOBILE":                     sender_mobile,
-        "INSERT_SENDER_EMAIL":                      sender_email,
-        "INSERT_OFFER_DATE":                        offer_date,
-        "INSERT_REFERENCE_NO":                      reference_no.strip(),
-        "INSERT_SUBJECT_FULL":                      subject,
-        "INSERT_PROJECT_NAME":                      project_name,
-        "INSERT_END_USER":                          end_user,
-        "INSERT_CURRENCY_FULL":                     currency_full,
-        "INSERT_TOTAL_PRICE_NUM":                   total_price_num,
-        "INSERT_CURRENCY_CODE":                     currency_code,
-        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":      price_words_run,
-        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS Only).": price_words_run,
-        "INSERT_INCOTERM_NAME":                     incoterm_name,
-        "INSERT_DELIVERY_MONTHS":                   f"{delivery_months} month(s)",
-        "INSERT_WARRANTY_MONTHS":                   f"{warranty_months} months",
-        "INSERT_PAYMENT_OPTION_HEADER":             pay_header,
-        "INSERT_PAYMENT_OPTION_LINE":               pay_lines,
-        "INSERT_PAYMENT_OPTION_LINES":              pay_lines,
-        "INSERT_MFC_DATE":                          mfc_date if is_firm else "",
-        "INSERT_IMPORT_PORT_SENTENCE":              import_port_sentence,
-        "INSERT_OFFER_VALIDITY":                    offer_validity if is_firm else "",
-        "INSERT_CANCEL_HIGH":                       cancel_high,
+        # Customer block
+        "INSERT_CUSTOMER_COMPANY":                          customer_company,
+        "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM":            po_box_full,
+        "INSERT_CUSTOMER_CITY_FULL":                        customer_city,
+        "INSERT_CUSTOMER_ATTN":                             f"Kind Attn: {customer_attn}",
+        "INSERT_CUSTOMER_TEL_LINE":                         tel_str,
+        "INSERT_CUSTOMER_FAX_LINE":                         fax_str,
+        "INSERT_CUSTOMER_MOB_LINE":                         mob_str,
+        # Sender block — email is split across 2 runs; merged key handled by merge_and_replace()
+        "INSERT_SENDER_NAME":                               sender_name,
+        "INSERT_SENDER_DEPT":                               sender_dept,
+        "INSERT_SENDER_MOBILE":                             sender_mobile,
+        "INSERT_SENDER_EMAIL":                              sender_email,   # merged from INSERT_SENDER_ + EMAIL
+        # Header meta
+        "INSERT_OFFER_DATE":                                offer_date,
+        "INSERT_REFERENCE_NO":                              reference_no.strip(),
+        # Offer content
+        "INSERT_SUBJECT_FULL":                              subject,
+        "INSERT_PROJECT_NAME":                              project_name,
+        "INSERT_END_USER":                                  end_user,       # merged from INSERT + _END_USER
+        # Price
+        "INSERT_CURRENCY_FULL":                             currency_full,
+        "INSERT_TOTAL_PRICE_NUM":                           total_price_num,
+        "INSERT_CURRENCY_CODE":                             currency_code,  # standalone (Budgetary)
+        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":  price_words_run,  # Firm variant
+        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS Only).": price_words_run,  # Budgetary variant
+        # Commercial terms
+        "INSERT_INCOTERM_NAME":                             incoterm_name,
+        "INSERT_DELIVERY_MONTHS":                           f"{delivery_months} month(s)",
+        "INSERT_WARRANTY_MONTHS":                           f"{warranty_months} months",
+        "INSERT_PAYMENT_OPTION_HEADER":                     pay_header,
+        "INSERT_PAYMENT_OPTION_LINE":                       pay_lines,   # Firm
+        "INSERT_PAYMENT_OPTION_LINES":                      pay_lines,   # Budgetary
+        # Firm-only
+        "INSERT_MFC_DATE":                                  mfc_date if is_firm else "",
+        "INSERT_IMPORT_PORT_SENTENCE":                      import_port_sentence,
+        "INSERT_OFFER_VALIDITY":                            offer_validity if is_firm else "",
+        "INSERT_CANCEL_HIGH":                               cancel_high,
     }
 
     # ── File setup ───────────────────────────────────────────
@@ -490,7 +557,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
 
     offer_short = "FIRM" if is_firm else "BUD"
     cust_short  = customer_company.split()[0].upper().strip(".,)")
-    SKIP        = {"FOR","THE","OF","AND","IN","A","AN","PKG","WORKS","-","PROJECT"}
+    SKIP        = {"FOR", "THE", "OF", "AND", "IN", "A", "AN", "PKG", "WORKS", "-", "PROJECT"}
     proj_short  = "".join(w for w in project_name.split() if w.upper() not in SKIP)[:12].upper()
     try:    date_str = datetime.strptime(offer_date.strip(), "%d %B %Y").strftime("%Y%m%d")
     except: date_str = offer_date.replace(" ", "")[:8]
@@ -501,58 +568,29 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     doc = Document(filepath)
 
     # ════════════════════════════════════════════════════════
-    # PASS 1 — Highlighted runs
+    # PASS 1 — Merge split runs + replace all highlighted INSERT_ tokens
+    #          Covers body, tables, AND running headers (via all_paras)
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
-        all_runs = para.runs
-        i = 0
-        while i < len(all_runs) - 1:
-            ri  = all_runs[i]
-            ri1 = all_runs[i + 1]
-            if ri.font.highlight_color is not None and ri1.font.highlight_color is not None:
-                combined = (ri.text or "") + (ri1.text or "")
-                if combined.strip() in replacements or (
-                    "INSERT_" in (ri.text or "") and "INSERT_" in (ri1.text or "")
-                ):
-                    ri.text  = combined
-                    ri1.text = ""
-                    clear_highlight(ri1)
-                    ri1.font.highlight_color = None
-                    continue
-            i += 1
-
-        for r in all_runs:
-            if not r.text:
-                continue
-            key = r.text.strip()
-            if key in replacements:
-                fill(r, replacements[key])
-            elif r.font.highlight_color is not None and "INSERT_" in r.text:
-                new_text = re.sub(
-                    r"INSERT_\w+",
-                    lambda m: replacements.get(m.group(0), ""),
-                    r.text
-                )
-                fill(r, new_text)
+        merge_and_replace(para, replacements)
 
     # ════════════════════════════════════════════════════════
-    # PASS 2 — Non-highlighted INSERT_ runs
+    # PASS 2 — Non-highlighted INSERT_ runs (fallback)
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
-        all_runs = para.runs
+        runs = para.runs
+        # Merge adjacent non-HL runs that together form a key
         i = 0
-        while i < len(all_runs) - 1:
-            ri  = all_runs[i]
-            ri1 = all_runs[i + 1]
-            if "INSERT_" in (ri.text or "") and "INSERT_" in (ri1.text or ""):
-                combined = (ri.text or "") + (ri1.text or "")
+        while i < len(runs) - 1:
+            r0, r1 = runs[i], runs[i + 1]
+            if "INSERT_" in (r0.text or "") and "INSERT_" in (r1.text or ""):
+                combined = (r0.text or "") + (r1.text or "")
                 if combined.strip() in replacements:
-                    ri.text  = combined
-                    ri1.text = ""
+                    r0.text = combined
+                    r1.text = ""
                     continue
             i += 1
-
-        for r in all_runs:
+        for r in para.runs:
             if not r.text or "INSERT_" not in r.text:
                 continue
             key = r.text.strip()
@@ -570,18 +608,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                     clear_highlight(r)
 
     # ════════════════════════════════════════════════════════
-    # PASS 3 — Budgetary: strip stray "{"
-    # ════════════════════════════════════════════════════════
-    if not is_firm:
-        for para in all_paras(doc):
-            if "Non-binding" in para.text and "Budgetary" in para.text and "Price" in para.text:
-                for r in para.runs:
-                    if r.text and r.text.strip() == "{":
-                        r.text = ""
-                break
-
-    # ════════════════════════════════════════════════════════
-    # PASS 4 — Scope tables
+    # PASS 3 — Scope tables
     # ════════════════════════════════════════════════════════
     if len(doc.tables) > 1:
         fill_table(doc.tables[1], scope_items)
@@ -589,7 +616,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         fill_table(doc.tables[2], optional_items)
 
     # ════════════════════════════════════════════════════════
-    # PASS 5 — Final safety sweep
+    # PASS 4 — Final safety sweep: nuke any remaining INSERT_ tokens
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         for r in para.runs:
