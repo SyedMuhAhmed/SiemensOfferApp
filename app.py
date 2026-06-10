@@ -71,11 +71,9 @@ def fill(run, text):
     clear_highlight(run)
 
 def all_paras(doc):
-    """Yield every paragraph in the document body, all tables, AND all headers."""
     from docx.text.paragraph import Paragraph
     from docx.table import Table
 
-    # ── Body ──────────────────────────────────────────────────
     for elem in doc.element.body:
         tag = elem.tag.split("}")[-1]
         if tag == "p":
@@ -86,7 +84,6 @@ def all_paras(doc):
                     for p in cell.paragraphs:
                         yield p
 
-    # ── Headers (covers running header on page 2+) ────────────
     for section in doc.sections:
         for hdr in [section.header, section.first_page_header, section.even_page_header]:
             if hdr is None:
@@ -100,16 +97,10 @@ def all_paras(doc):
                             yield p
 
 def merge_and_replace(para, replacements):
-    """
-    Merge adjacent highlighted runs whose combined text matches a key,
-    then apply replacements. Handles split tokens like INSERT_SENDER_ + EMAIL
-    and INSERT + _END_USER.
-    """
     runs = para.runs
     if not runs:
         return
 
-    # ── Step 1: merge adjacent HL runs until combined key is found ──
     changed = True
     while changed:
         changed = False
@@ -126,7 +117,6 @@ def merge_and_replace(para, replacements):
                     changed = True
                     break
 
-    # ── Step 2: replace exact-match highlighted runs ──────────────
     for r in para.runs:
         if not r.text:
             continue
@@ -135,7 +125,6 @@ def merge_and_replace(para, replacements):
             if key in replacements:
                 fill(r, replacements[key])
             elif "INSERT_" in r.text:
-                # inline substitution (e.g. "END USER:  INSERT_END_USER")
                 new_text = re.sub(
                     r"INSERT_\w+",
                     lambda m: replacements.get(m.group(0), ""),
@@ -260,7 +249,6 @@ with col_c5:
     warranty_sel = st.selectbox("Warranty Period (months)", warranty_options)
     warranty_months = st.text_input("Enter warranty months") if warranty_sel == "Other" else warranty_sel
 
-# ── Payment Option ───────────────────────────────────────────
 st.markdown("**Payment Option**")
 
 payment_option_labels = [
@@ -324,7 +312,6 @@ else:
             "The text above will be inserted verbatim into the document."
         )
 
-# ── Cancellation High % (Firm only) ─────────────────────────
 if is_firm:
     cancel_high = st.selectbox(
         "Cancellation Charge (high bracket)",
@@ -441,6 +428,44 @@ for i in range(int(num_opt)):
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────
+# SECTION 8 - OUTPUT FILENAME
+# ─────────────────────────────────────────────────────────────
+
+st.markdown('<div class="section-header">💾 Output Filename</div>', unsafe_allow_html=True)
+
+# Build the auto filename from current form values (live preview)
+offer_short_prev = "FIRM" if is_firm else "BUD"
+cust_short_prev  = customer_company.split()[0].upper().strip(".,)") if customer_company else "CUSTOMER"
+SKIP_WORDS       = {"FOR", "THE", "OF", "AND", "IN", "A", "AN", "PKG", "WORKS", "-", "PROJECT"}
+proj_short_prev  = "".join(w for w in project_name.split() if w.upper() not in SKIP_WORDS)[:12].upper() if project_name else "PROJECT"
+try:    date_str_prev = datetime.strptime(offer_date.strip(), "%d %B %Y").strftime("%Y%m%d")
+except: date_str_prev = offer_date.replace(" ", "")[:8] if offer_date else "DATE"
+
+auto_filename = f"{offer_short_prev}_{cust_short_prev}_{proj_short_prev}_{date_str_prev}_v01"
+
+filename_mode = st.radio(
+    "Filename mode",
+    ["🔄 Auto", "✏️ Custom"],
+    horizontal=True,
+    label_visibility="collapsed",
+)
+
+if filename_mode == "✏️ Custom":
+    custom_filename_input = st.text_input(
+        "Enter filename (without extension)",
+        placeholder=f"e.g. {auto_filename}",
+    )
+    # Strip .docx if user accidentally typed it, then re-add
+    raw = custom_filename_input.strip().removesuffix(".docx")
+    final_filename = (raw if raw else auto_filename) + ".docx"
+    st.caption(f"📄 File will be saved as: **{final_filename}**")
+else:
+    final_filename = auto_filename + ".docx"
+    st.caption(f"📄 File will be saved as: **{final_filename}**")
+
+st.markdown("---")
+
+# ─────────────────────────────────────────────────────────────
 # GENERATE
 # ─────────────────────────────────────────────────────────────
 
@@ -506,9 +531,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     price_words_run = f"{currency_code} {total_price_words} Only)."
 
     # ── Replacements map ─────────────────────────────────────
-    # Keys must exactly match the INSERT_ token(s) as they appear in the template
     replacements = {
-        # Customer block
         "INSERT_CUSTOMER_COMPANY":                          customer_company,
         "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM":            po_box_full,
         "INSERT_CUSTOMER_CITY_FULL":                        customer_city,
@@ -516,32 +539,26 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_CUSTOMER_TEL_LINE":                         tel_str,
         "INSERT_CUSTOMER_FAX_LINE":                         fax_str,
         "INSERT_CUSTOMER_MOB_LINE":                         mob_str,
-        # Sender block — email is split across 2 runs; merged key handled by merge_and_replace()
         "INSERT_SENDER_NAME":                               sender_name,
         "INSERT_SENDER_DEPT":                               sender_dept,
         "INSERT_SENDER_MOBILE":                             sender_mobile,
-        "INSERT_SENDER_EMAIL":                              sender_email,   # merged from INSERT_SENDER_ + EMAIL
-        # Header meta
+        "INSERT_SENDER_EMAIL":                              sender_email,
         "INSERT_OFFER_DATE":                                offer_date,
         "INSERT_REFERENCE_NO":                              reference_no.strip(),
-        # Offer content
         "INSERT_SUBJECT_FULL":                              subject,
         "INSERT_PROJECT_NAME":                              project_name,
-        "INSERT_END_USER":                                  end_user,       # merged from INSERT + _END_USER
-        # Price
+        "INSERT_END_USER":                                  end_user,
         "INSERT_CURRENCY_FULL":                             currency_full,
         "INSERT_TOTAL_PRICE_NUM":                           total_price_num,
-        "INSERT_CURRENCY_CODE":                             currency_code,  # standalone (Budgetary)
-        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":  price_words_run,  # Firm variant
-        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS Only).": price_words_run,  # Budgetary variant
-        # Commercial terms
+        "INSERT_CURRENCY_CODE":                             currency_code,
+        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":  price_words_run,
+        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS Only).": price_words_run,
         "INSERT_INCOTERM_NAME":                             incoterm_name,
         "INSERT_DELIVERY_MONTHS":                           f"{delivery_months} month(s)",
         "INSERT_WARRANTY_MONTHS":                           f"{warranty_months} months",
         "INSERT_PAYMENT_OPTION_HEADER":                     pay_header,
-        "INSERT_PAYMENT_OPTION_LINE":                       pay_lines,   # Firm
-        "INSERT_PAYMENT_OPTION_LINES":                      pay_lines,   # Budgetary
-        # Firm-only
+        "INSERT_PAYMENT_OPTION_LINE":                       pay_lines,
+        "INSERT_PAYMENT_OPTION_LINES":                      pay_lines,
         "INSERT_MFC_DATE":                                  mfc_date if is_firm else "",
         "INSERT_IMPORT_PORT_SENTENCE":                      import_port_sentence,
         "INSERT_OFFER_VALIDITY":                            offer_validity if is_firm else "",
@@ -555,21 +572,12 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         os.path.join(BASE_DIR, "template_Budgetary_FIXED.docx")
     )
 
-    offer_short = "FIRM" if is_firm else "BUD"
-    cust_short  = customer_company.split()[0].upper().strip(".,)")
-    SKIP        = {"FOR", "THE", "OF", "AND", "IN", "A", "AN", "PKG", "WORKS", "-", "PROJECT"}
-    proj_short  = "".join(w for w in project_name.split() if w.upper() not in SKIP)[:12].upper()
-    try:    date_str = datetime.strptime(offer_date.strip(), "%d %B %Y").strftime("%Y%m%d")
-    except: date_str = offer_date.replace(" ", "")[:8]
-    filename = f"{offer_short}_{cust_short}_{proj_short}_{date_str}_v01.docx"
-    filepath = os.path.join(BASE_DIR, filename)
-
+    filepath = os.path.join(BASE_DIR, final_filename)
     shutil.copy(TEMPLATE_PATH, filepath)
     doc = Document(filepath)
 
     # ════════════════════════════════════════════════════════
     # PASS 1 — Merge split runs + replace all highlighted INSERT_ tokens
-    #          Covers body, tables, AND running headers (via all_paras)
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         merge_and_replace(para, replacements)
@@ -579,7 +587,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         runs = para.runs
-        # Merge adjacent non-HL runs that together form a key
         i = 0
         while i < len(runs) - 1:
             r0, r1 = runs[i], runs[i + 1]
@@ -616,7 +623,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         fill_table(doc.tables[2], optional_items)
 
     # ════════════════════════════════════════════════════════
-    # PASS 4 — Final safety sweep: nuke any remaining INSERT_ tokens
+    # PASS 4 — Final safety sweep
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         for r in para.runs:
@@ -628,12 +635,12 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
 
     doc.save(filepath)
 
-    st.success("✅ Offer letter generated successfully!")
+    st.success(f"✅ Offer letter generated successfully!")
     with open(filepath, "rb") as f:
         st.download_button(
-            label=f"📥 Download {filename}",
+            label=f"📥 Download {final_filename}",
             data=f,
-            file_name=filename,
+            file_name=final_filename,
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             use_container_width=True
         )
