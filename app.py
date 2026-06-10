@@ -1,4 +1,4 @@
-app_code = '''import streamlit as st
+import streamlit as st
 import shutil
 from docx import Document
 from docx.shared import Pt
