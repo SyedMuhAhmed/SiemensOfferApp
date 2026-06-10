@@ -21,7 +21,7 @@ st.markdown('<div class="main-header">⚡ Siemens Offer Letter Generator</div>',
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────
-# BASE DIRECTORY (fixes FileNotFoundError on Streamlit Cloud)
+# BASE DIRECTORY
 # ─────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -45,7 +45,7 @@ def number_to_words(n):
         elif num < 1000:
             return ones[num // 100] + " Hundred" + (" " + helper(num % 100) if num % 100 != 0 else "")
         elif num < 1_000_000:
-            return helper(num // 1000) + " Thousand" + (" " + helper(num % 1000) if num % 1000 != 0 else "")
+                return helper(num // 1000) + " Thousand" + (" " + helper(num % 1000) if num % 1000 != 0 else "")
         elif num < 1_000_000_000:
             return helper(num // 1_000_000) + " Million" + (" " + helper(num % 1_000_000) if num % 1_000_000 != 0 else "")
         else:
@@ -162,17 +162,6 @@ with col9:
 with col10:
     offer_date = st.text_input("Offer Date (e.g. 15 April 2025)")
 
-customer_type_options = ["National (UAE-based)", "International", "Siemens Energy", "Critical Country"]
-customer_type_sel = st.selectbox("Customer Type", customer_type_options)
-customer_type_map = {
-    "National (UAE-based)": "National",
-    "International": "International",
-    "Siemens Energy": "Siemens Energy",
-    "Critical Country": "Critical Country"
-}
-customer_type = customer_type_map[customer_type_sel]
-is_national = (customer_type == "National")
-
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────
@@ -226,6 +215,7 @@ with col_c6:
     payment_days_sel = st.selectbox("Payment Days", payment_days_options)
     payment_days = st.text_input("Enter days") if payment_days_sel == "Other" else payment_days_sel
 
+# ── Payment Option ───────────────────────────────────────────
 payment_option_options = [
     "Option A - 20% down payment + 80% against shipping documents",
     "Option B - 20% advance + 10% drawings + 20% MFC + 50% bill of lading",
@@ -241,6 +231,13 @@ elif payment_option_sel.startswith("Option B"):
 else:
     payment_option = "Other"
     custom_payment = st.text_area("Enter custom payment terms")
+
+# ── Cancellation High % ──────────────────────────────────────
+cancel_high = st.selectbox(
+    "Cancellation Charge (high bracket)",
+    ["-80%", "-90%"],
+    help="Select -80% for National customers, -90% for International / Siemens Energy / Critical Country"
+)
 
 st.markdown("---")
 
@@ -368,23 +365,29 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         st.error(f"Please fill in: {', '.join(errors)}")
         st.stop()
 
-    # ── Derived values ──────────────────────────────────────────
+    # ── Derived values ───────────────────────────────────────
     customer_city     = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
-            f"80% of the contract value payable against presentation of shipping documents within {payment_days} days."
+            f"20% of the contract value to be paid as down payment within 15 days "
+            f"after placement of the order.\n"
+            f"80% of the contract value payable against presentation of shipping "
+            f"documents or warehouse receipt within {payment_days} days."
         )
     elif payment_option == "B":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
-            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
-            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
-            f"50% of the contract value against Bill of Lading, payable within {payment_days} days."
+            f"20% of the contract value to be paid as Advance Payment within 15 days "
+            f"after Order Confirmation.\n"
+            f"10% of the contract value against submission of Drawings (SLD - Single "
+            f"Line Diagrams), payable within {payment_days} days.\n"
+            f"20% of the contract value upon Manufacturing Clearance, payable within "
+            f"45 days.\n"
+            f"50% of the contract value against presentation of shipping documents "
+            f"(Bill of Lading), payable within {payment_days} days."
         )
     else:
         pay_header = "Payment terms: As per agreement"
@@ -430,14 +433,14 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_MFC_DATE":              mfc_date if is_firm else "",
         "INSERT_IMPORT_PORT_SENTENCE":  import_port_sentence,
         "INSERT_OFFER_VALIDITY":        offer_validity if is_firm else "",
-        "INSERT_CANCEL_HIGH":           "-80%" if is_national else "-90%",
+        "INSERT_CANCEL_HIGH":           cancel_high,   # ← directly from UI dropdown
     }
 
-    # ── File setup ──────────────────────────────────────────────
+    # ── File setup ───────────────────────────────────────────
     TEMPLATE_PATH = (
-       os.path.join(BASE_DIR, "template_Firm_FIXED.docx")
-       if is_firm else
-       os.path.join(BASE_DIR, "template_Budgetary_FIXED.docx")
+        os.path.join(BASE_DIR, "template_Firm_FIXED.docx")
+        if is_firm else
+        os.path.join(BASE_DIR, "template_Budgetary_FIXED.docx")
     )
 
     offer_short = "FIRM" if is_firm else "BUD"
