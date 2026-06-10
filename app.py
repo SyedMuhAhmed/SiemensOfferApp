@@ -105,31 +105,6 @@ def replace_multi_placeholder_run(run, replacements):
         clear_highlight(run)
     return new_text != text
 
-def patch_cancellation_table(doc, cancel_rate_90):
-    """
-    Directly targets doc.tables[3], col 2 (Cancellation column).
-    Template stores: 5%, 45%, 90%, 100%  (rows 2,3,5,6)
-    We rewrite them to: -5%, -45%, -80% or -90%, -100%
-    """
-    val_for_90 = "-90%" if cancel_rate_90 else "-80%"
-    cancel_map = {
-        "5%":   "-5%",
-        "45%":  "-45%",
-        "90%":  val_for_90,
-        "100%": "-100%",
-    }
-    table = doc.tables[3]
-    CANCEL_COL = 2
-    for row in table.rows:
-        cell = row.cells[CANCEL_COL]
-        for para in cell.paragraphs:
-            t = para.text.strip()
-            if t in cancel_map:
-                for r in para.runs:
-                    stripped = r.text.strip()
-                    if stripped in cancel_map:
-                        r.text = r.text.replace(stripped, cancel_map[stripped])
-
 # ─────────────────────────────────────────────────────────────
 # SECTION 1 - OFFER TYPE
 # ─────────────────────────────────────────────────────────────
@@ -137,7 +112,6 @@ def patch_cancellation_table(doc, cancel_rate_90):
 st.markdown('<div class="section-header">Offer Type</div>', unsafe_allow_html=True)
 offer_type = st.radio("", ["Firm", "Budgetary"], horizontal=True, label_visibility="collapsed")
 is_firm = (offer_type == "Firm")
-is_budgetary = (offer_type == "Budgetary")
 
 st.markdown("---")
 
@@ -148,45 +122,32 @@ st.markdown("---")
 st.markdown('<div class="section-header">📋 Customer Information</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
-
 with col1:
-    company_options = [
-        "Electro Mechanical Co. LLC (ELMEC)",
-        "ADNOC",
-        "Nofal for Trade & Agencies",
-        "Siemens Energy LLC",
-        "Other"
-    ]
+    company_options = ["Electro Mechanical Co. LLC (ELMEC)", "ADNOC", "Nofal for Trade & Agencies", "Siemens Energy LLC", "Other"]
     customer_company_sel = st.selectbox("Customer Company", company_options)
-    if customer_company_sel == "Other":
-        customer_company = st.text_input("Enter Company Name")
-    else:
-        customer_company = customer_company_sel
+    customer_company = st.text_input("Enter Company Name") if customer_company_sel == "Other" else customer_company_sel
 
 with col2:
     country_options = ["UAE", "Saudi Arabia", "Algeria", "Yemen", "Kuwait", "Oman", "Qatar", "Other"]
     country_sel = st.selectbox("Country", country_options)
-    if country_sel == "Other":
-        country = st.text_input("Enter Country Name")
-    else:
-        country = country_sel
+    country = st.text_input("Enter Country Name") if country_sel == "Other" else country_sel
 
 col3, col4 = st.columns(2)
 with col3:
     customer_attn = st.text_input("Contact Person (e.g. Mr. John Smith)")
 with col4:
     city_default = "Abu Dhabi" if country in ["UAE", ""] else country
-    customer_city_input = st.text_input("City (e.g. Abu Dhabi)", value=city_default)
+    customer_city_input = st.text_input("City", value=city_default)
 
 col5, col6 = st.columns(2)
 with col5:
-    customer_po_box = st.text_input("P.O. Box Number (or leave blank)")
+    customer_po_box = st.text_input("P.O. Box (or leave blank)")
 with col6:
     customer_fax = st.text_input("Fax (or leave blank)")
 
 col7, col8 = st.columns(2)
 with col7:
-    customer_tel = st.text_input("Tel (e.g. +971 2 6262 800, or leave blank)")
+    customer_tel = st.text_input("Tel (or leave blank)")
 with col8:
     customer_mob = st.text_input("Mobile (or leave blank)")
 
@@ -198,12 +159,8 @@ with col10:
 
 customer_type_options = ["National (UAE-based)", "International", "Siemens Energy", "Critical Country"]
 customer_type_sel = st.selectbox("Customer Type", customer_type_options)
-customer_type_map = {
-    "National (UAE-based)": "National",
-    "International": "International",
-    "Siemens Energy": "Siemens Energy",
-    "Critical Country": "Critical Country"
-}
+customer_type_map = {"National (UAE-based)": "National", "International": "International",
+                     "Siemens Energy": "Siemens Energy", "Critical Country": "Critical Country"}
 customer_type = customer_type_map[customer_type_sel]
 is_national = (customer_type == "National")
 
@@ -214,11 +171,9 @@ st.markdown("---")
 # ─────────────────────────────────────────────────────────────
 
 st.markdown('<div class="section-header">📝 Offer Details</div>', unsafe_allow_html=True)
-
-subject = st.text_input("Subject (e.g. 33KV Switchgear Supply)")
+subject      = st.text_input("Subject (e.g. 33KV Switchgear Supply)")
 project_name = st.text_input("Project Name")
-end_user = st.text_input("End User")
-
+end_user     = st.text_input("End User")
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────
@@ -230,57 +185,35 @@ st.markdown('<div class="section-header">💰 Commercial Terms</div>', unsafe_al
 col_c1, col_c2 = st.columns(2)
 with col_c1:
     currency_options = {
-        "EUR - Euro": ("EUR", "Euro"),
-        "USD - US Dollar": ("USD", "US Dollar"),
-        "GBP - British Pound": ("GBP", "British Pound"),
-        "AED - UAE Dirham": ("AED", "UAE Dirham"),
+        "EUR - Euro": ("EUR", "Euro"), "USD - US Dollar": ("USD", "US Dollar"),
+        "GBP - British Pound": ("GBP", "British Pound"), "AED - UAE Dirham": ("AED", "UAE Dirham"),
         "SAR - Saudi Riyal": ("SAR", "Saudi Riyal"),
     }
     currency_sel = st.selectbox("Currency", list(currency_options.keys()))
     currency_code, currency_full = currency_options[currency_sel]
-
 with col_c2:
     total_price_num = st.text_input("Total Price (e.g. 3,218,545)")
 
 col_c3, col_c4 = st.columns(2)
 with col_c3:
-    incoterm_options = [
-        "FCA, Bremerhaven, Germany",
-        "CIF, Abu Dhabi seaport",
-        "DAP, Abu Dhabi",
-        "EXW, Bremerhaven, Germany",
-        "Other"
-    ]
+    incoterm_options = ["FCA, Bremerhaven, Germany", "CIF, Abu Dhabi seaport",
+                        "DAP, Abu Dhabi", "EXW, Bremerhaven, Germany", "Other"]
     incoterm_sel = st.selectbox("Incoterm", incoterm_options)
-    if incoterm_sel == "Other":
-        incoterm_name = st.text_input("Enter Incoterm")
-    else:
-        incoterm_name = incoterm_sel
-
+    incoterm_name = st.text_input("Enter Incoterm") if incoterm_sel == "Other" else incoterm_sel
 with col_c4:
     delivery_options = ["06", "09", "12", "15", "18", "24", "Other"]
     delivery_sel = st.selectbox("Delivery Period (months)", delivery_options)
-    if delivery_sel == "Other":
-        delivery_months = st.text_input("Enter number of months")
-    else:
-        delivery_months = delivery_sel
+    delivery_months = st.text_input("Enter months") if delivery_sel == "Other" else delivery_sel
 
 col_c5, col_c6 = st.columns(2)
 with col_c5:
     warranty_options = ["12", "18", "24", "Other"]
     warranty_sel = st.selectbox("Warranty Period (months)", warranty_options)
-    if warranty_sel == "Other":
-        warranty_months = st.text_input("Enter warranty months")
-    else:
-        warranty_months = warranty_sel
-
+    warranty_months = st.text_input("Enter warranty months") if warranty_sel == "Other" else warranty_sel
 with col_c6:
     payment_days_options = ["30", "45", "60", "90", "120", "Other"]
     payment_days_sel = st.selectbox("Payment Days", payment_days_options)
-    if payment_days_sel == "Other":
-        payment_days = st.text_input("Enter number of days")
-    else:
-        payment_days = payment_days_sel
+    payment_days = st.text_input("Enter days") if payment_days_sel == "Other" else payment_days_sel
 
 payment_option_options = [
     "Option A - 20% down payment + 80% against shipping documents",
@@ -289,14 +222,11 @@ payment_option_options = [
 ]
 payment_option_sel = st.selectbox("Payment Option", payment_option_options)
 if payment_option_sel.startswith("Option A"):
-    payment_option = "A"
-    custom_payment = ""
+    payment_option = "A"; custom_payment = ""
 elif payment_option_sel.startswith("Option B"):
-    payment_option = "B"
-    custom_payment = ""
+    payment_option = "B"; custom_payment = ""
 else:
-    payment_option = "Other"
-    custom_payment = st.text_area("Enter custom payment terms")
+    payment_option = "Other"; custom_payment = st.text_area("Enter custom payment terms")
 
 st.markdown("---")
 
@@ -316,10 +246,7 @@ if is_firm:
         "Other": None
     }
     install_sel = st.selectbox("Country / Port of Installation", list(install_options.keys()))
-    if install_sel == "Other":
-        import_port = st.text_input("Enter country / port")
-    else:
-        import_port = install_options[install_sel]
+    import_port = st.text_input("Enter country / port") if install_sel == "Other" else install_options[install_sel]
 
     col_f1, col_f2 = st.columns(2)
     with col_f1:
@@ -334,50 +261,26 @@ if is_firm:
         "Other"
     ]
     signatory_sel = st.selectbox("Signatories", signatory_options)
-    if signatory_sel == "Other":
-        signatories = st.text_input("Enter signatory names")
-    else:
-        signatories = signatory_sel
-
-    st.markdown("**Cancellation Rate (9-12 weeks row)**")
-    cancel_rate_sel = st.radio(
-        "Select the cancellation % for the 9-12 weeks row:",
-        ["-80%  (National / UAE-based customer)", "-90%  (International customer)"],
-        horizontal=True
-    )
-    cancel_rate_90 = cancel_rate_sel.startswith("-90")
-
+    signatories = st.text_input("Enter signatory names") if signatory_sel == "Other" else signatory_sel
     st.markdown("---")
 else:
-    import_port = ""
-    mfc_date = ""
-    offer_validity = ""
-    signatories = ""
-    cancel_rate_90 = False
+    import_port = ""; mfc_date = ""; offer_validity = ""; signatories = ""
 
 # ─────────────────────────────────────────────────────────────
-# SECTION 6 - SENDER / SALES CONTACT
+# SECTION 6 - SALES CONTACT
 # ─────────────────────────────────────────────────────────────
 
 st.markdown('<div class="section-header">👤 Sales Contact</div>', unsafe_allow_html=True)
 
 sales_contacts = {
-    "Ahmad Awny | RC-AE SI EA S VD-V-D | +971 55 2003541 | ahmad.awny@siemens.com": {
-        "name": "Ahmad Awny", "dept": "RC-AE SI EA S VD-V-D",
-        "mobile": "+971 55 2003541", "email": "ahmad.awny@siemens.com"
-    },
-    "Vivek Gopalakrishnan | RC-AE SI EA S | +971 55 2002583 | vivek.gopalakrishnan@siemens.com": {
-        "name": "Vivek Gopalakrishnan", "dept": "RC-AE SI EA S",
-        "mobile": "+971 55 2002583", "email": "vivek.gopalakrishnan@siemens.com"
-    },
-    "Madiha Khan | RC-AE SI EA S | +971 55 2003818 | madiha.khan@siemens.com": {
-        "name": "Madiha Khan", "dept": "RC-AE SI EA S",
-        "mobile": "+971 55 2003818", "email": "madiha.khan@siemens.com"
-    },
-    "Hyun-Sik Kim | RC-AE SI EA S VD-V-D | +971 55 2002693 | hyun-sik.kim@siemens.com": {
-        "name": "Hyun-Sik Kim", "dept": "RC-AE SI EA S VD-V-D",
-        "mobile": "+971 55 2002693", "email": "hyun-sik.kim@siemens.com"
-    },
+    "Ahmad Awny | RC-AE SI EA S VD-V-D | +971 55 2003541 | ahmad.awny@siemens.com":
+        {"name": "Ahmad Awny", "dept": "RC-AE SI EA S VD-V-D", "mobile": "+971 55 2003541", "email": "ahmad.awny@siemens.com"},
+    "Vivek Gopalakrishnan | RC-AE SI EA S | +971 55 2002583 | vivek.gopalakrishnan@siemens.com":
+        {"name": "Vivek Gopalakrishnan", "dept": "RC-AE SI EA S", "mobile": "+971 55 2002583", "email": "vivek.gopalakrishnan@siemens.com"},
+    "Madiha Khan | RC-AE SI EA S | +971 55 2003818 | madiha.khan@siemens.com":
+        {"name": "Madiha Khan", "dept": "RC-AE SI EA S", "mobile": "+971 55 2003818", "email": "madiha.khan@siemens.com"},
+    "Hyun-Sik Kim | RC-AE SI EA S VD-V-D | +971 55 2002693 | hyun-sik.kim@siemens.com":
+        {"name": "Hyun-Sik Kim", "dept": "RC-AE SI EA S VD-V-D", "mobile": "+971 55 2002693", "email": "hyun-sik.kim@siemens.com"},
     "Other": None
 }
 
@@ -392,10 +295,8 @@ if sales_sel == "Other":
         sender_email = st.text_input("Sender Email")
 else:
     sc = sales_contacts[sales_sel]
-    sender_name   = sc["name"]
-    sender_dept   = sc["dept"]
-    sender_mobile = sc["mobile"]
-    sender_email  = sc["email"]
+    sender_name = sc["name"]; sender_dept = sc["dept"]
+    sender_mobile = sc["mobile"]; sender_email = sc["email"]
 
 st.markdown("---")
 
@@ -404,100 +305,76 @@ st.markdown("---")
 # ─────────────────────────────────────────────────────────────
 
 st.markdown('<div class="section-header">📦 Scope of Supply</div>', unsafe_allow_html=True)
-st.caption("Enter each line item below.")
 
 num_scope = st.number_input("Number of scope items", min_value=1, max_value=20, value=1, step=1)
 scope_items = []
 for i in range(int(num_scope)):
     st.markdown(f"**Item {i+1}**")
     col_sc1, col_sc2, col_sc3 = st.columns([4, 1, 2])
-    with col_sc1:
-        desc = st.text_input("Description", key=f"scope_desc_{i}")
-    with col_sc2:
-        qty = st.text_input("Qty", key=f"scope_qty_{i}")
-    with col_sc3:
-        total = st.text_input("Total Price", key=f"scope_total_{i}")
+    with col_sc1: desc = st.text_input("Description", key=f"scope_desc_{i}")
+    with col_sc2: qty = st.text_input("Qty", key=f"scope_qty_{i}")
+    with col_sc3: total = st.text_input("Total Price", key=f"scope_total_{i}")
     scope_items.append({"no": str(i+1), "desc": desc, "qty": qty, "total": total})
 
-st.markdown("**Optional Items** (leave blank if none)")
+st.markdown("**Optional Items**")
 num_opt = st.number_input("Number of optional items", min_value=0, max_value=10, value=0, step=1)
 optional_items = []
 for i in range(int(num_opt)):
     st.markdown(f"**Optional Item {i+1}**")
     col_o1, col_o2, col_o3 = st.columns([4, 1, 2])
-    with col_o1:
-        odesc = st.text_input("Description", key=f"opt_desc_{i}")
-    with col_o2:
-        oqty = st.text_input("Qty", key=f"opt_qty_{i}")
-    with col_o3:
-        ototal = st.text_input("Total Price", key=f"opt_total_{i}")
+    with col_o1: odesc = st.text_input("Description", key=f"opt_desc_{i}")
+    with col_o2: oqty = st.text_input("Qty", key=f"opt_qty_{i}")
+    with col_o3: ototal = st.text_input("Total Price", key=f"opt_total_{i}")
     optional_items.append({"no": str(i+1), "desc": odesc, "qty": oqty, "total": ototal})
 
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────
-# GENERATE BUTTON
+# GENERATE
 # ─────────────────────────────────────────────────────────────
 
 if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=True):
 
     errors = []
-    if not customer_company or customer_company == "Other":
-        errors.append("Customer Company")
-    if not customer_attn:
-        errors.append("Contact Person")
-    if not offer_date:
-        errors.append("Offer Date")
-    if not subject:
-        errors.append("Subject")
-    if not project_name:
-        errors.append("Project Name")
-    if not end_user:
-        errors.append("End User")
-    if not total_price_num:
-        errors.append("Total Price")
-    if is_firm and not mfc_date:
-        errors.append("MFC Date")
-    if is_firm and not offer_validity:
-        errors.append("Offer Validity")
-
+    if not customer_company or customer_company == "Other": errors.append("Customer Company")
+    if not customer_attn:   errors.append("Contact Person")
+    if not offer_date:      errors.append("Offer Date")
+    if not subject:         errors.append("Subject")
+    if not project_name:    errors.append("Project Name")
+    if not end_user:        errors.append("End User")
+    if not total_price_num: errors.append("Total Price")
+    if is_firm and not mfc_date:       errors.append("MFC Date")
+    if is_firm and not offer_validity: errors.append("Offer Validity")
     if errors:
-        st.error(f"Please fill in the following required fields: {', '.join(errors)}")
+        st.error(f"Please fill in: {', '.join(errors)}")
         st.stop()
 
-    # ── Derived values ──────────────────────────────────────────
     customer_city     = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
-        pay_lines  = (
-            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
-            f"80% of the contract value payable against presentation of shipping documents within {payment_days} days."
-        )
+        pay_lines  = (f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
+                      f"80% of the contract value payable against presentation of shipping documents within {payment_days} days.")
     elif payment_option == "B":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
-        pay_lines  = (
-            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
-            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
-            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
-            f"50% of the contract value against Bill of Lading, payable within {payment_days} days."
-        )
+        pay_lines  = (f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
+                      f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
+                      f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
+                      f"50% of the contract value against Bill of Lading, payable within {payment_days} days.")
     else:
         pay_header = "Payment terms: As per agreement"
         pay_lines  = custom_payment
 
-    import_port_sentence = (
-        f"The scope shall be offloaded in and imported via a port of {import_port}."
-        if is_firm and import_port else ""
-    )
+    import_port_sentence = (f"The scope shall be offloaded in and imported via a port of {import_port}."
+                            if is_firm and import_port else "")
 
     po_box_str = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
     tel_str    = f"Tel : {customer_tel}"         if customer_tel.strip()     else ""
     fax_str    = f"Fax: {customer_fax}"          if customer_fax.strip()     else ""
     mob_str    = f"Mob: {customer_mob}"          if customer_mob.strip()     else ""
-    ref_str    = reference_no.strip()
 
+    # ── THE KEY FIX: INSERT_CANCEL_HIGH in the replacements map ──
     replacements = {
         "INSERT_CUSTOMER_COMPANY":      customer_company,
         "INSERT_CUSTOMER_PO_BOX":       po_box_str,
@@ -511,7 +388,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_SENDER_MOBILE":         sender_mobile,
         "INSERT_SENDER_EMAIL":          sender_email,
         "INSERT_OFFER_DATE":            offer_date,
-        "INSERT_REFERENCE_NO":          ref_str,
+        "INSERT_REFERENCE_NO":          reference_no.strip(),
         "INSERT_SUBJECT":               subject,
         "INSERT_PROJECT_NAME":          project_name,
         "INSERT_END_USER":              end_user,
@@ -528,31 +405,28 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_MFC_DATE":              mfc_date if is_firm else "",
         "INSERT_IMPORT_PORT_SENTENCE":  import_port_sentence,
         "INSERT_OFFER_VALIDITY":        offer_validity if is_firm else "",
+        "INSERT_CANCEL_HIGH":           "-80%" if is_national else "-90%",   # ← THE FIX
     }
 
-    # ── File setup ──────────────────────────────────────────────
-    TEMPLATE_PATH = "template_Firm_FIXED.docx" if is_firm else "template_Budgetary_FIXED.docx"
+    TEMPLATE_PATH = "tmeplate_-Firm.docx" if is_firm else "tempate_-Budgetary.docx"
 
     offer_short = "FIRM" if is_firm else "BUD"
     cust_short  = customer_company.split()[0].upper().strip(".,)")
     SKIP        = {"FOR","THE","OF","AND","IN","A","AN","PKG","WORKS","-","PROJECT"}
     proj_short  = "".join(w for w in project_name.split() if w.upper() not in SKIP)[:12].upper()
-    try:
-        date_str = datetime.strptime(offer_date.strip(), "%d %B %Y").strftime("%Y%m%d")
-    except:
-        date_str = offer_date.replace(" ", "")[:8]
+    try:    date_str = datetime.strptime(offer_date.strip(), "%d %B %Y").strftime("%Y%m%d")
+    except: date_str = offer_date.replace(" ", "")[:8]
     filename = f"{offer_short}_{cust_short}_{proj_short}_{date_str}_v01.docx"
     filepath = f"/tmp/{filename}"
 
     shutil.copy(TEMPLATE_PATH, filepath)
     doc = Document(filepath)
 
-    # ── PASS 1: Apply all INSERT_ replacements ──────────────────
+    # PASS 1 - Replace all INSERT_ placeholders
     for para in all_paras(doc):
         hrs = [r for r in para.runs if r.font.highlight_color is not None]
         if not hrs:
             continue
-
         i = 0
         while i < len(hrs) - 1:
             combined2 = (hrs[i].text or "") + (hrs[i+1].text or "")
@@ -562,7 +436,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 clear_highlight(hrs[i+1])
                 hrs[i+1].font.highlight_color = None
             i += 1
-
         for r in hrs:
             key = (r.text or "").strip()
             if key in replacements:
@@ -570,14 +443,14 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             elif "INSERT_" in (r.text or ""):
                 replace_multi_placeholder_run(r, replacements)
 
-    # ── PASS 2: Clear ALL remaining highlights ──────────────────
+    # PASS 2 - Clear remaining highlights
     for para in all_paras(doc):
         for r in para.runs:
             if r.font.highlight_color is not None:
                 clear_highlight(r)
                 r.font.highlight_color = None
 
-    # ── PASS 3: Firm style patches ──────────────────────────────
+    # PASS 3 - Firm style patches
     if is_firm:
         for para in all_paras(doc):
             if para.text.strip().startswith("The offer currency is"):
@@ -588,8 +461,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         fill(r, mfc_date)
                     if r.bold and r.underline and r.font.highlight_color is None:
                         r.text = incoterm_name
-                    if r.text in ("{", "}"):
-                        r.text = ""
+                    if r.text in ("{", "}"): r.text = ""
                 break
 
         for para in all_paras(doc):
@@ -597,10 +469,8 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 for r in para.runs:
                     if r.bold and r.font.highlight_color is None:
                         if r.text and (r.text.strip()[:2].isdigit() or "month" in r.text):
-                            r.text = f"{delivery_months} month(s)"
-                            break
-                    if r.text in ("{", "}"):
-                        r.text = ""
+                            r.text = f"{delivery_months} month(s)"; break
+                    if r.text in ("{", "}"): r.text = ""
                 break
 
         for para in all_paras(doc):
@@ -608,28 +478,19 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 replaced = False
                 for r in para.runs:
                     if r.bold and r.underline and r.font.highlight_color is None and not replaced:
-                        r.text = offer_validity
-                        replaced = True
+                        r.text = offer_validity; replaced = True
                     elif r.bold and r.underline and r.font.highlight_color is None and replaced:
                         r.text = ""
-                    if r.text in ("{", "}"):
-                        r.text = ""
+                    if r.text in ("{", "}"): r.text = ""
                 break
 
-    # ── PASS 4: Cancellation table patch ───────────────────────
-    # Uses dedicated function that directly indexes doc.tables[3]
-    # col 2 = Cancellation column
-    # Template values: 5%, 45%, 90%, 100%  → rewrite with minus signs
-    if is_firm:
-        patch_cancellation_table(doc, cancel_rate_90)
-
-    # ── PASS 5: Scope tables ────────────────────────────────────
+    # PASS 4 - Scope tables
     if len(doc.tables) > 1:
         fill_table(doc.tables[1], scope_items)
     if optional_items and len(doc.tables) > 2:
         fill_table(doc.tables[2], optional_items)
 
-    # ── PASS 6: Final cleanup ───────────────────────────────────
+    # PASS 5 - Final cleanup
     for para in all_paras(doc):
         for r in para.runs:
             if r.text and "INSERT_" in r.text:
