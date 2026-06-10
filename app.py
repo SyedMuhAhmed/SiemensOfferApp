@@ -21,6 +21,11 @@ st.markdown('<div class="main-header">⚡ Siemens Offer Letter Generator</div>',
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────
+# BASE DIRECTORY (fixes FileNotFoundError on Streamlit Cloud)
+# ─────────────────────────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# ─────────────────────────────────────────────────────────────
 # HELPER FUNCTIONS
 # ─────────────────────────────────────────────────────────────
 
@@ -159,8 +164,12 @@ with col10:
 
 customer_type_options = ["National (UAE-based)", "International", "Siemens Energy", "Critical Country"]
 customer_type_sel = st.selectbox("Customer Type", customer_type_options)
-customer_type_map = {"National (UAE-based)": "National", "International": "International",
-                     "Siemens Energy": "Siemens Energy", "Critical Country": "Critical Country"}
+customer_type_map = {
+    "National (UAE-based)": "National",
+    "International": "International",
+    "Siemens Energy": "Siemens Energy",
+    "Critical Country": "Critical Country"
+}
 customer_type = customer_type_map[customer_type_sel]
 is_national = (customer_type == "National")
 
@@ -185,8 +194,10 @@ st.markdown('<div class="section-header">💰 Commercial Terms</div>', unsafe_al
 col_c1, col_c2 = st.columns(2)
 with col_c1:
     currency_options = {
-        "EUR - Euro": ("EUR", "Euro"), "USD - US Dollar": ("USD", "US Dollar"),
-        "GBP - British Pound": ("GBP", "British Pound"), "AED - UAE Dirham": ("AED", "UAE Dirham"),
+        "EUR - Euro": ("EUR", "Euro"),
+        "USD - US Dollar": ("USD", "US Dollar"),
+        "GBP - British Pound": ("GBP", "British Pound"),
+        "AED - UAE Dirham": ("AED", "UAE Dirham"),
         "SAR - Saudi Riyal": ("SAR", "Saudi Riyal"),
     }
     currency_sel = st.selectbox("Currency", list(currency_options.keys()))
@@ -222,11 +233,14 @@ payment_option_options = [
 ]
 payment_option_sel = st.selectbox("Payment Option", payment_option_options)
 if payment_option_sel.startswith("Option A"):
-    payment_option = "A"; custom_payment = ""
+    payment_option = "A"
+    custom_payment = ""
 elif payment_option_sel.startswith("Option B"):
-    payment_option = "B"; custom_payment = ""
+    payment_option = "B"
+    custom_payment = ""
 else:
-    payment_option = "Other"; custom_payment = st.text_area("Enter custom payment terms")
+    payment_option = "Other"
+    custom_payment = st.text_area("Enter custom payment terms")
 
 st.markdown("---")
 
@@ -264,7 +278,10 @@ if is_firm:
     signatories = st.text_input("Enter signatory names") if signatory_sel == "Other" else signatory_sel
     st.markdown("---")
 else:
-    import_port = ""; mfc_date = ""; offer_validity = ""; signatories = ""
+    import_port = ""
+    mfc_date = ""
+    offer_validity = ""
+    signatories = ""
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 6 - SALES CONTACT
@@ -288,15 +305,17 @@ sales_sel = st.selectbox("Sales Contact", list(sales_contacts.keys()))
 if sales_sel == "Other":
     col_s1, col_s2 = st.columns(2)
     with col_s1:
-        sender_name = st.text_input("Sender Name")
+        sender_name   = st.text_input("Sender Name")
         sender_mobile = st.text_input("Sender Mobile")
     with col_s2:
-        sender_dept = st.text_input("Sender Department")
+        sender_dept  = st.text_input("Sender Department")
         sender_email = st.text_input("Sender Email")
 else:
     sc = sales_contacts[sales_sel]
-    sender_name = sc["name"]; sender_dept = sc["dept"]
-    sender_mobile = sc["mobile"]; sender_email = sc["email"]
+    sender_name   = sc["name"]
+    sender_dept   = sc["dept"]
+    sender_mobile = sc["mobile"]
+    sender_email  = sc["email"]
 
 st.markdown("---")
 
@@ -311,8 +330,8 @@ scope_items = []
 for i in range(int(num_scope)):
     st.markdown(f"**Item {i+1}**")
     col_sc1, col_sc2, col_sc3 = st.columns([4, 1, 2])
-    with col_sc1: desc = st.text_input("Description", key=f"scope_desc_{i}")
-    with col_sc2: qty = st.text_input("Qty", key=f"scope_qty_{i}")
+    with col_sc1: desc  = st.text_input("Description", key=f"scope_desc_{i}")
+    with col_sc2: qty   = st.text_input("Qty",         key=f"scope_qty_{i}")
     with col_sc3: total = st.text_input("Total Price", key=f"scope_total_{i}")
     scope_items.append({"no": str(i+1), "desc": desc, "qty": qty, "total": total})
 
@@ -322,8 +341,8 @@ optional_items = []
 for i in range(int(num_opt)):
     st.markdown(f"**Optional Item {i+1}**")
     col_o1, col_o2, col_o3 = st.columns([4, 1, 2])
-    with col_o1: odesc = st.text_input("Description", key=f"opt_desc_{i}")
-    with col_o2: oqty = st.text_input("Qty", key=f"opt_qty_{i}")
+    with col_o1: odesc  = st.text_input("Description", key=f"opt_desc_{i}")
+    with col_o2: oqty   = st.text_input("Qty",         key=f"opt_qty_{i}")
     with col_o3: ototal = st.text_input("Total Price", key=f"opt_total_{i}")
     optional_items.append({"no": str(i+1), "desc": odesc, "qty": oqty, "total": ototal})
 
@@ -349,32 +368,38 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         st.error(f"Please fill in: {', '.join(errors)}")
         st.stop()
 
+    # ── Derived values ──────────────────────────────────────────
     customer_city     = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
-        pay_lines  = (f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
-                      f"80% of the contract value payable against presentation of shipping documents within {payment_days} days.")
+        pay_lines  = (
+            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
+            f"80% of the contract value payable against presentation of shipping documents within {payment_days} days."
+        )
     elif payment_option == "B":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
-        pay_lines  = (f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
-                      f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
-                      f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
-                      f"50% of the contract value against Bill of Lading, payable within {payment_days} days.")
+        pay_lines  = (
+            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
+            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
+            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
+            f"50% of the contract value against Bill of Lading, payable within {payment_days} days."
+        )
     else:
         pay_header = "Payment terms: As per agreement"
         pay_lines  = custom_payment
 
-    import_port_sentence = (f"The scope shall be offloaded in and imported via a port of {import_port}."
-                            if is_firm and import_port else "")
+    import_port_sentence = (
+        f"The scope shall be offloaded in and imported via a port of {import_port}."
+        if is_firm and import_port else ""
+    )
 
     po_box_str = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
     tel_str    = f"Tel : {customer_tel}"         if customer_tel.strip()     else ""
     fax_str    = f"Fax: {customer_fax}"          if customer_fax.strip()     else ""
     mob_str    = f"Mob: {customer_mob}"          if customer_mob.strip()     else ""
 
-    # ── THE KEY FIX: INSERT_CANCEL_HIGH in the replacements map ──
     replacements = {
         "INSERT_CUSTOMER_COMPANY":      customer_company,
         "INSERT_CUSTOMER_PO_BOX":       po_box_str,
@@ -405,10 +430,15 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_MFC_DATE":              mfc_date if is_firm else "",
         "INSERT_IMPORT_PORT_SENTENCE":  import_port_sentence,
         "INSERT_OFFER_VALIDITY":        offer_validity if is_firm else "",
-        "INSERT_CANCEL_HIGH":           "-80%" if is_national else "-90%",   # ← THE FIX
+        "INSERT_CANCEL_HIGH":           "-80%" if is_national else "-90%",
     }
 
-    TEMPLATE_PATH = "tmeplate_-Firm.docx" if is_firm else "tempate_-Budgetary.docx"
+    # ── File setup ──────────────────────────────────────────────
+    TEMPLATE_PATH = (
+        os.path.join(BASE_DIR, "tmeplate_-Firm.docx")
+        if is_firm else
+        os.path.join(BASE_DIR, "tempate_-Budgetary.docx")
+    )
 
     offer_short = "FIRM" if is_firm else "BUD"
     cust_short  = customer_company.split()[0].upper().strip(".,)")
@@ -417,7 +447,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     try:    date_str = datetime.strptime(offer_date.strip(), "%d %B %Y").strftime("%Y%m%d")
     except: date_str = offer_date.replace(" ", "")[:8]
     filename = f"{offer_short}_{cust_short}_{proj_short}_{date_str}_v01.docx"
-    filepath = f"/tmp/{filename}"
+    filepath = os.path.join(BASE_DIR, filename)
 
     shutil.copy(TEMPLATE_PATH, filepath)
     doc = Document(filepath)
@@ -461,7 +491,8 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         fill(r, mfc_date)
                     if r.bold and r.underline and r.font.highlight_color is None:
                         r.text = incoterm_name
-                    if r.text in ("{", "}"): r.text = ""
+                    if r.text in ("{", "}"):
+                        r.text = ""
                 break
 
         for para in all_paras(doc):
@@ -469,8 +500,10 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 for r in para.runs:
                     if r.bold and r.font.highlight_color is None:
                         if r.text and (r.text.strip()[:2].isdigit() or "month" in r.text):
-                            r.text = f"{delivery_months} month(s)"; break
-                    if r.text in ("{", "}"): r.text = ""
+                            r.text = f"{delivery_months} month(s)"
+                            break
+                    if r.text in ("{", "}"):
+                        r.text = ""
                 break
 
         for para in all_paras(doc):
@@ -478,10 +511,12 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 replaced = False
                 for r in para.runs:
                     if r.bold and r.underline and r.font.highlight_color is None and not replaced:
-                        r.text = offer_validity; replaced = True
+                        r.text = offer_validity
+                        replaced = True
                     elif r.bold and r.underline and r.font.highlight_color is None and replaced:
                         r.text = ""
-                    if r.text in ("{", "}"): r.text = ""
+                    if r.text in ("{", "}"):
+                        r.text = ""
                 break
 
     # PASS 4 - Scope tables
