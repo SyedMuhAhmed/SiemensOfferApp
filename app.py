@@ -435,9 +435,9 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
 
     # ── File setup ──────────────────────────────────────────────
     TEMPLATE_PATH = (
-        os.path.join(BASE_DIR, "tmeplate_-Firm.docx")
-        if is_firm else
-        os.path.join(BASE_DIR, "tempate_-Budgetary.docx")
+       os.path.join(BASE_DIR, "template_Firm_FIXED.docx")
+       if is_firm else
+       os.path.join(BASE_DIR, "template_Budgetary_FIXED.docx")
     )
 
     offer_short = "FIRM" if is_firm else "BUD"
