@@ -9,16 +9,284 @@ import re
 
 st.set_page_config(page_title="Siemens Offer Letter Generator", page_icon="⚡", layout="wide")
 
+# ─────────────────────────────────────────────────────────────
+# SIEMENS PROFESSIONAL THEME
+# ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .main-header { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.2rem; }
-    .section-header { font-size: 1.3rem; font-weight: 600; color: #16213e; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-    hr { margin: 1rem 0; }
+    /* ── Google Font ── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    /* ── Global reset ── */
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ── Page background ── */
+    .stApp {
+        background-color: #f4f6f9;
+    }
+
+    /* ── Hide Streamlit default chrome ── */
+    #MainMenu, footer, header { visibility: hidden; }
+
+    /* ── Top banner ── */
+    .siemens-banner {
+        background: linear-gradient(135deg, #009999 0%, #007a7a 60%, #005f5f 100%);
+        border-radius: 12px;
+        padding: 28px 36px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0,153,153,0.25);
+    }
+    .siemens-banner-left h1 {
+        color: #ffffff;
+        font-size: 1.9rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.3px;
+    }
+    .siemens-banner-left p {
+        color: rgba(255,255,255,0.80);
+        font-size: 0.88rem;
+        margin: 4px 0 0 0;
+        font-weight: 400;
+    }
+    .siemens-logo-box {
+        background: rgba(255,255,255,0.15);
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* ── Section cards ── */
+    .section-card {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 24px 28px;
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    /* ── Section header ── */
+    .section-header {
+        font-size: 1.0rem;
+        font-weight: 700;
+        color: #009999;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #009999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+
+    /* ── Input labels ── */
+    label, .stSelectbox label, .stTextInput label,
+    .stNumberInput label, .stTextArea label, .stRadio label {
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    /* ── Input boxes ── */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stNumberInput > div > div > input {
+        border: 1.5px solid #d1d5db !important;
+        border-radius: 7px !important;
+        font-size: 0.9rem !important;
+        color: #111827 !important;
+        background: #fafafa !important;
+        transition: border-color 0.2s;
+    }
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: #009999 !important;
+        background: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(0,153,153,0.12) !important;
+    }
+
+    /* ── Selectbox ── */
+    .stSelectbox > div > div {
+        border: 1.5px solid #d1d5db !important;
+        border-radius: 7px !important;
+        background: #fafafa !important;
+    }
+
+    /* ── Radio buttons ── */
+    .stRadio > div {
+        gap: 6px;
+    }
+    .stRadio > div > label {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 16px !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        color: #374151 !important;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .stRadio > div > label:hover {
+        border-color: #009999;
+        background: #f0fafa;
+        color: #009999 !important;
+    }
+    [data-testid="stRadio"] [aria-checked="true"] + div label,
+    .stRadio > div > label[data-checked="true"] {
+        border-color: #009999 !important;
+        background: #e6f7f7 !important;
+        color: #009999 !important;
+    }
+
+    /* ── Primary button ── */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #009999 0%, #007a7a 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 1.0rem !important;
+        font-weight: 700 !important;
+        padding: 14px 0 !important;
+        letter-spacing: 0.3px;
+        box-shadow: 0 4px 14px rgba(0,153,153,0.35) !important;
+        transition: all 0.2s !important;
+    }
+    .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #00b3b3 0%, #009999 100%) !important;
+        box-shadow: 0 6px 20px rgba(0,153,153,0.45) !important;
+        transform: translateY(-1px);
+    }
+
+    /* ── Download button ── */
+    .stDownloadButton > button {
+        background: #ffffff !important;
+        color: #009999 !important;
+        border: 2px solid #009999 !important;
+        border-radius: 8px !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        padding: 12px 0 !important;
+        transition: all 0.2s !important;
+    }
+    .stDownloadButton > button:hover {
+        background: #009999 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(0,153,153,0.3) !important;
+    }
+
+    /* ── Success / error / info boxes ── */
+    .stSuccess {
+        background: #ecfdf5 !important;
+        border-left: 4px solid #10b981 !important;
+        border-radius: 8px !important;
+        color: #065f46 !important;
+    }
+    .stAlert[data-baseweb="notification"] {
+        border-radius: 8px !important;
+    }
+
+    /* ── Info box ── */
+    .stInfo {
+        background: #eff6ff !important;
+        border-left: 4px solid #3b82f6 !important;
+        border-radius: 8px !important;
+    }
+
+    /* ── Number input ── */
+    .stNumberInput > div { border-radius: 7px !important; }
+
+    /* ── Caption / helper text ── */
+    .stCaption, small {
+        color: #6b7280 !important;
+        font-size: 0.80rem !important;
+    }
+
+    /* ── Scope item cards ── */
+    .scope-item-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 3px solid #009999;
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 12px;
+    }
+
+    /* ── Filename preview pill ── */
+    .filename-pill {
+        display: inline-block;
+        background: #e6f7f7;
+        border: 1px solid #009999;
+        border-radius: 20px;
+        padding: 5px 16px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #007a7a;
+        margin-top: 6px;
+    }
+
+    /* ── Footer ── */
+    .siemens-footer {
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.75rem;
+        padding: 24px 0 8px 0;
+        border-top: 1px solid #e2e8f0;
+        margin-top: 32px;
+    }
+    .siemens-footer span {
+        color: #009999;
+        font-weight: 600;
+    }
+
+    /* ── Step badge ── */
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: #009999;
+        color: white;
+        border-radius: 50%;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-header">⚡ Siemens Offer Letter Generator</div>', unsafe_allow_html=True)
-st.markdown("---")
+# ─────────────────────────────────────────────────────────────
+# TOP BANNER
+# ─────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="siemens-banner">
+    <div class="siemens-banner-left">
+        <h1>⚡ Offer Letter Generator</h1>
+        <p>Siemens Industrial LLC &nbsp;·&nbsp; Smart Document Automation &nbsp;·&nbsp; RC-AE SI EA S</p>
+    </div>
+    <div class="siemens-logo-box">SIEMENS</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # BASE DIRECTORY
@@ -153,70 +421,77 @@ def fill_table(table, items):
 # SECTION 1 - OFFER TYPE
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">📄 Offer Type</div>', unsafe_allow_html=True)
-offer_type = st.radio("", ["Firm", "Budgetary"], horizontal=True, label_visibility="collapsed")
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">1</span> Offer Type</div>', unsafe_allow_html=True)
+offer_type = st.radio("Select the type of commercial offer to generate:", ["Firm", "Budgetary"], horizontal=True)
 is_firm = (offer_type == "Firm")
-st.markdown("---")
+if is_firm:
+    st.info("📋 **Firm Offer** — Legally binding commercial offer with full terms, MFC date, validity, and signatories.")
+else:
+    st.info("📋 **Budgetary Offer** — Non-binding indicative price offer for budgeting purposes.")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 2 - CUSTOMER INFORMATION
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">📋 Customer Information</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">2</span> Customer Information</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 with col1:
     company_options = ["Electro Mechanical Co. LLC (ELMEC)", "ADNOC", "Nofal for Trade & Agencies", "Siemens Energy LLC", "Other"]
     customer_company_sel = st.selectbox("Customer Company", company_options)
-    customer_company = st.text_input("Enter Company Name") if customer_company_sel == "Other" else customer_company_sel
+    customer_company = st.text_input("Enter Company Name", placeholder="Type company name...") if customer_company_sel == "Other" else customer_company_sel
 
 with col2:
     country_options = ["UAE", "Saudi Arabia", "Algeria", "Yemen", "Kuwait", "Oman", "Qatar", "Other"]
     country_sel = st.selectbox("Country", country_options)
-    country = st.text_input("Enter Country Name") if country_sel == "Other" else country_sel
+    country = st.text_input("Enter Country Name", placeholder="Type country name...") if country_sel == "Other" else country_sel
 
 col3, col4 = st.columns(2)
 with col3:
-    customer_attn = st.text_input("Contact Person (e.g. Mr. John Smith)")
+    customer_attn = st.text_input("Contact Person", placeholder="e.g. Mr. John Smith")
 with col4:
     city_default = "Abu Dhabi" if country in ["UAE", ""] else country
     customer_city_input = st.text_input("City", value=city_default)
 
 col5, col6 = st.columns(2)
 with col5:
-    customer_po_box = st.text_input("P.O. Box (or leave blank)")
+    customer_po_box = st.text_input("P.O. Box", placeholder="Leave blank if not applicable")
 with col6:
-    customer_fax = st.text_input("Fax (or leave blank)")
+    customer_fax = st.text_input("Fax", placeholder="Leave blank if not applicable")
 
 col7, col8 = st.columns(2)
 with col7:
-    customer_tel = st.text_input("Tel (or leave blank)")
+    customer_tel = st.text_input("Tel", placeholder="Leave blank if not applicable")
 with col8:
-    customer_mob = st.text_input("Mobile (or leave blank)")
+    customer_mob = st.text_input("Mobile", placeholder="Leave blank if not applicable")
 
 col9, col10 = st.columns(2)
 with col9:
-    reference_no = st.text_input("Reference No. (or leave blank)")
+    reference_no = st.text_input("Reference No.", placeholder="Leave blank if not applicable")
 with col10:
-    offer_date = st.text_input("Offer Date (e.g. 15 April 2025)")
+    offer_date = st.text_input("Offer Date", placeholder="e.g. 15 April 2025")
 
-st.markdown("---")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 3 - OFFER DETAILS
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">📝 Offer Details</div>', unsafe_allow_html=True)
-subject      = st.text_input("Subject (e.g. 33KV Switchgear Supply)")
-project_name = st.text_input("Project Name")
-end_user     = st.text_input("End User")
-st.markdown("---")
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">3</span> Offer Details</div>', unsafe_allow_html=True)
+subject      = st.text_input("Subject", placeholder="e.g. 33KV Switchgear Supply")
+col_od1, col_od2 = st.columns(2)
+with col_od1:
+    project_name = st.text_input("Project Name", placeholder="e.g. PDHPP Project")
+with col_od2:
+    end_user = st.text_input("End User", placeholder="e.g. STEP Spa")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 4 - COMMERCIAL TERMS
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">💰 Commercial Terms</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">4</span> Commercial Terms</div>', unsafe_allow_html=True)
 
 col_c1, col_c2 = st.columns(2)
 with col_c1:
@@ -230,26 +505,27 @@ with col_c1:
     currency_sel = st.selectbox("Currency", list(currency_options.keys()))
     currency_code, currency_full = currency_options[currency_sel]
 with col_c2:
-    total_price_num = st.text_input("Total Price (e.g. 3,218,545)")
+    total_price_num = st.text_input("Total Price", placeholder="e.g. 3,218,545")
 
 col_c3, col_c4 = st.columns(2)
 with col_c3:
     incoterm_options = ["FCA, Bremerhaven, Germany", "CIF, Abu Dhabi seaport",
                         "DAP, Abu Dhabi", "EXW, Bremerhaven, Germany", "Other"]
     incoterm_sel = st.selectbox("Incoterm", incoterm_options)
-    incoterm_name = st.text_input("Enter Incoterm") if incoterm_sel == "Other" else incoterm_sel
+    incoterm_name = st.text_input("Enter Incoterm", placeholder="e.g. FCA, Hamburg, Germany") if incoterm_sel == "Other" else incoterm_sel
 with col_c4:
     delivery_options = ["06", "09", "12", "15", "18", "24", "Other"]
     delivery_sel = st.selectbox("Delivery Period (months)", delivery_options)
-    delivery_months = st.text_input("Enter months") if delivery_sel == "Other" else delivery_sel
+    delivery_months = st.text_input("Enter months", placeholder="e.g. 10") if delivery_sel == "Other" else delivery_sel
 
-col_c5, _ = st.columns(2)
+col_c5, col_c6 = st.columns(2)
 with col_c5:
     warranty_options = ["12", "18", "24", "Other"]
     warranty_sel = st.selectbox("Warranty Period (months)", warranty_options)
-    warranty_months = st.text_input("Enter warranty months") if warranty_sel == "Other" else warranty_sel
+    warranty_months = st.text_input("Enter warranty months", placeholder="e.g. 24") if warranty_sel == "Other" else warranty_sel
 
-st.markdown("**Payment Option**")
+st.markdown("---")
+st.markdown("**💳 Payment Structure**")
 
 payment_option_labels = [
     "Option A — 20% down payment + 80% against shipping documents",
@@ -313,22 +589,23 @@ else:
         )
 
 if is_firm:
+    st.markdown("---")
     cancel_high = st.selectbox(
-        "Cancellation Charge (high bracket)",
+        "Cancellation Charge — High Bracket",
         ["80%", "90%"],
         help="Select -80% for National customers, -90% for International / Siemens Energy / Critical Country"
     )
 else:
     cancel_high = ""
 
-st.markdown("---")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 5 - FIRM ONLY FIELDS
 # ─────────────────────────────────────────────────────────────
 
 if is_firm:
-    st.markdown('<div class="section-header">🏗️ Firm Offer Details</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">5</span> Firm Offer Details</div>', unsafe_allow_html=True)
 
     install_options = {
         "UAE - Abu Dhabi (Dubai or Northern Emirates)": "the Emirate of Abu Dhabi (Dubai or Northern Emirates)",
@@ -339,13 +616,13 @@ if is_firm:
         "Other": None
     }
     install_sel = st.selectbox("Country / Port of Installation", list(install_options.keys()))
-    import_port = st.text_input("Enter country / port") if install_sel == "Other" else install_options[install_sel]
+    import_port = st.text_input("Enter country / port", placeholder="e.g. a Kuwaiti seaport") if install_sel == "Other" else install_options[install_sel]
 
     col_f1, col_f2 = st.columns(2)
     with col_f1:
-        mfc_date = st.text_input("MFC Date (e.g. 26th February 2026)")
+        mfc_date = st.text_input("MFC Date", placeholder="e.g. 26th February 2026")
     with col_f2:
-        offer_validity = st.text_input("Offer Validity (e.g. March 30, 2026)")
+        offer_validity = st.text_input("Offer Validity", placeholder="e.g. March 30, 2026")
 
     signatory_options = [
         "Robert Hennig + Rodrigo Fernandes",
@@ -354,8 +631,8 @@ if is_firm:
         "Other"
     ]
     signatory_sel = st.selectbox("Signatories", signatory_options)
-    signatories = st.text_input("Enter signatory names") if signatory_sel == "Other" else signatory_sel
-    st.markdown("---")
+    signatories = st.text_input("Enter signatory names", placeholder="Name 1 + Name 2 + ...") if signatory_sel == "Other" else signatory_sel
+    st.markdown('</div>', unsafe_allow_html=True)
 else:
     import_port    = ""
     mfc_date       = ""
@@ -366,7 +643,8 @@ else:
 # SECTION 6 - SALES CONTACT
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">👤 Sales Contact</div>', unsafe_allow_html=True)
+step_num = "6" if is_firm else "5"
+st.markdown(f'<div class="section-card"><div class="section-header"><span class="step-badge">{step_num}</span> Sales Contact</div>', unsafe_allow_html=True)
 
 sales_contacts = {
     "Ahmad Awny | RC-AE SI EA S VD-V-D | +971 55 2003541 | ahmad.awny@siemens.com":
@@ -384,56 +662,69 @@ sales_sel = st.selectbox("Sales Contact", list(sales_contacts.keys()))
 if sales_sel == "Other":
     col_s1, col_s2 = st.columns(2)
     with col_s1:
-        sender_name   = st.text_input("Sender Name")
-        sender_mobile = st.text_input("Sender Mobile")
+        sender_name   = st.text_input("Sender Name", placeholder="Full name")
+        sender_mobile = st.text_input("Sender Mobile", placeholder="+971 XX XXXXXXX")
     with col_s2:
-        sender_dept  = st.text_input("Sender Department")
-        sender_email = st.text_input("Sender Email")
+        sender_dept  = st.text_input("Sender Department", placeholder="e.g. RC-AE SI EA S")
+        sender_email = st.text_input("Sender Email", placeholder="name@siemens.com")
 else:
     sc = sales_contacts[sales_sel]
     sender_name   = sc["name"]
     sender_dept   = sc["dept"]
     sender_mobile = sc["mobile"]
     sender_email  = sc["email"]
+    col_si1, col_si2, col_si3 = st.columns(3)
+    with col_si1:
+        st.markdown(f"<div style='background:#f0fafa;border:1px solid #009999;border-radius:7px;padding:10px 14px;font-size:0.85rem;'><b>📧</b> {sender_email}</div>", unsafe_allow_html=True)
+    with col_si2:
+        st.markdown(f"<div style='background:#f0fafa;border:1px solid #009999;border-radius:7px;padding:10px 14px;font-size:0.85rem;'><b>📱</b> {sender_mobile}</div>", unsafe_allow_html=True)
+    with col_si3:
+        st.markdown(f"<div style='background:#f0fafa;border:1px solid #009999;border-radius:7px;padding:10px 14px;font-size:0.85rem;'><b>🏢</b> {sender_dept}</div>", unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 7 - SCOPE OF SUPPLY
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">📦 Scope of Supply</div>', unsafe_allow_html=True)
+step_num2 = "7" if is_firm else "6"
+st.markdown(f'<div class="section-card"><div class="section-header"><span class="step-badge">{step_num2}</span> Scope of Supply</div>', unsafe_allow_html=True)
 
 num_scope = st.number_input("Number of scope items", min_value=1, max_value=20, value=1, step=1)
 scope_items = []
 for i in range(int(num_scope)):
+    st.markdown(f'<div class="scope-item-card">', unsafe_allow_html=True)
     st.markdown(f"**Item {i+1}**")
     col_sc1, col_sc2, col_sc3 = st.columns([4, 1, 2])
-    with col_sc1: desc  = st.text_input("Description", key=f"scope_desc_{i}")
-    with col_sc2: qty   = st.text_input("Qty",         key=f"scope_qty_{i}")
-    with col_sc3: total = st.text_input("Total Price", key=f"scope_total_{i}")
+    with col_sc1: desc  = st.text_input("Description", key=f"scope_desc_{i}", placeholder="e.g. 33KV 8DA10 AIS NXAIR Switchgear Panel")
+    with col_sc2: qty   = st.text_input("Qty",         key=f"scope_qty_{i}",  placeholder="e.g. 10")
+    with col_sc3: total = st.text_input("Total Price", key=f"scope_total_{i}", placeholder="e.g. EUR 3,218,545")
     scope_items.append({"no": str(i+1), "desc": desc, "qty": qty, "total": total})
+    st.markdown('</div>', unsafe_allow_html=True)
 
+st.markdown("---")
 st.markdown("**Optional Items**")
 num_opt = st.number_input("Number of optional items", min_value=0, max_value=10, value=0, step=1)
 optional_items = []
 for i in range(int(num_opt)):
+    st.markdown(f'<div class="scope-item-card">', unsafe_allow_html=True)
     st.markdown(f"**Optional Item {i+1}**")
     col_o1, col_o2, col_o3 = st.columns([4, 1, 2])
     with col_o1: odesc  = st.text_input("Description", key=f"opt_desc_{i}")
     with col_o2: oqty   = st.text_input("Qty",         key=f"opt_qty_{i}")
     with col_o3: ototal = st.text_input("Total Price", key=f"opt_total_{i}")
     optional_items.append({"no": str(i+1), "desc": odesc, "qty": oqty, "total": ototal})
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 8 - OUTPUT FILENAME
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">💾 Output Filename</div>', unsafe_allow_html=True)
+step_num3 = "8" if is_firm else "7"
+st.markdown(f'<div class="section-card"><div class="section-header"><span class="step-badge">{step_num3}</span> Output Filename</div>', unsafe_allow_html=True)
 
-# Build the auto filename from current form values (live preview)
 offer_short_prev = "FIRM" if is_firm else "BUD"
 cust_short_prev  = customer_company.split()[0].upper().strip(".,)") if customer_company else "CUSTOMER"
 SKIP_WORDS       = {"FOR", "THE", "OF", "AND", "IN", "A", "AN", "PKG", "WORKS", "-", "PROJECT"}
@@ -455,20 +746,19 @@ if filename_mode == "✏️ Custom":
         "Enter filename (without extension)",
         placeholder=f"e.g. {auto_filename}",
     )
-    # Strip .docx if user accidentally typed it, then re-add
     raw = custom_filename_input.strip().removesuffix(".docx")
     final_filename = (raw if raw else auto_filename) + ".docx"
-    st.caption(f"📄 File will be saved as: **{final_filename}**")
 else:
     final_filename = auto_filename + ".docx"
-    st.caption(f"📄 File will be saved as: **{final_filename}**")
 
-st.markdown("---")
+st.markdown(f'<div class="filename-pill">📄 {final_filename}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # GENERATE
 # ─────────────────────────────────────────────────────────────
 
+st.markdown("<br>", unsafe_allow_html=True)
 if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=True):
 
     errors = []
@@ -484,14 +774,12 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     if is_firm and not mfc_date:       errors.append("MFC Date")
     if is_firm and not offer_validity: errors.append("Offer Validity")
     if errors:
-        st.error(f"Please fill in: {', '.join(errors)}")
+        st.error(f"⚠️ Please fill in the following required fields: **{', '.join(errors)}**")
         st.stop()
 
-    # ── Derived values ───────────────────────────────────────
     customer_city     = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
-    # ── Payment text ─────────────────────────────────────────
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
@@ -516,13 +804,11 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         pay_header = f"Payment terms: {payment_days} days from delivery documents"
         pay_lines  = custom_payment_text.strip()
 
-    # ── Import port sentence (Firm only) ─────────────────────
     import_port_sentence = (
         f"The scope shall be offloaded in and imported via a port of {import_port}."
         if is_firm and import_port else ""
     )
 
-    # ── Build formatted line strings ─────────────────────────
     po_box_full = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
     tel_str     = f"Tel : {customer_tel}"         if customer_tel.strip()    else ""
     fax_str     = f"Fax: {customer_fax}"          if customer_fax.strip()    else ""
@@ -530,7 +816,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
 
     price_words_run = f"{currency_code} {total_price_words} Only)."
 
-    # ── Replacements map ─────────────────────────────────────
     replacements = {
         "INSERT_CUSTOMER_COMPANY":                          customer_company,
         "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM":            po_box_full,
@@ -565,7 +850,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_CANCEL_HIGH":                               cancel_high,
     }
 
-    # ── File setup ───────────────────────────────────────────
     TEMPLATE_PATH = (
         os.path.join(BASE_DIR, "template_Firm_FIXED.docx")
         if is_firm else
@@ -576,15 +860,9 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     shutil.copy(TEMPLATE_PATH, filepath)
     doc = Document(filepath)
 
-    # ════════════════════════════════════════════════════════
-    # PASS 1 — Merge split runs + replace all highlighted INSERT_ tokens
-    # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         merge_and_replace(para, replacements)
 
-    # ════════════════════════════════════════════════════════
-    # PASS 2 — Non-highlighted INSERT_ runs (fallback)
-    # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         runs = para.runs
         i = 0
@@ -614,17 +892,11 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                     r.text = new_text
                     clear_highlight(r)
 
-    # ════════════════════════════════════════════════════════
-    # PASS 3 — Scope tables
-    # ════════════════════════════════════════════════════════
     if len(doc.tables) > 1:
         fill_table(doc.tables[1], scope_items)
     if optional_items and len(doc.tables) > 2:
         fill_table(doc.tables[2], optional_items)
 
-    # ════════════════════════════════════════════════════════
-    # PASS 4 — Final safety sweep
-    # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         for r in para.runs:
             if r.text and "INSERT_" in r.text:
@@ -635,7 +907,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
 
     doc.save(filepath)
 
-    st.success(f"✅ Offer letter generated successfully!")
+    st.success(f"✅ **Offer letter generated successfully!** Your document is ready for download.")
     with open(filepath, "rb") as f:
         st.download_button(
             label=f"📥 Download {final_filename}",
@@ -644,3 +916,13 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             use_container_width=True
         )
+
+# ─────────────────────────────────────────────────────────────
+# FOOTER
+# ─────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="siemens-footer">
+    <span>Siemens Industrial LLC</span> &nbsp;·&nbsp; Offer Letter Generator &nbsp;·&nbsp;
+    RC-AE SI EA S &nbsp;·&nbsp; Internal Use Only
+</div>
+""", unsafe_allow_html=True)
