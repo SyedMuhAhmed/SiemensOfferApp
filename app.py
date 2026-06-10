@@ -105,6 +105,31 @@ def replace_multi_placeholder_run(run, replacements):
         clear_highlight(run)
     return new_text != text
 
+def patch_cancellation_table(doc, cancel_rate_90):
+    """
+    Directly targets doc.tables[3], col 2 (Cancellation column).
+    Template stores: 5%, 45%, 90%, 100%  (rows 2,3,5,6)
+    We rewrite them to: -5%, -45%, -80% or -90%, -100%
+    """
+    val_for_90 = "-90%" if cancel_rate_90 else "-80%"
+    cancel_map = {
+        "5%":   "-5%",
+        "45%":  "-45%",
+        "90%":  val_for_90,
+        "100%": "-100%",
+    }
+    table = doc.tables[3]
+    CANCEL_COL = 2
+    for row in table.rows:
+        cell = row.cells[CANCEL_COL]
+        for para in cell.paragraphs:
+            t = para.text.strip()
+            if t in cancel_map:
+                for r in para.runs:
+                    stripped = r.text.strip()
+                    if stripped in cancel_map:
+                        r.text = r.text.replace(stripped, cancel_map[stripped])
+
 # ─────────────────────────────────────────────────────────────
 # SECTION 1 - OFFER TYPE
 # ─────────────────────────────────────────────────────────────
@@ -440,7 +465,8 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         st.error(f"Please fill in the following required fields: {', '.join(errors)}")
         st.stop()
 
-    customer_city = f"{customer_city_input}, {country}"
+    # ── Derived values ──────────────────────────────────────────
+    customer_city     = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
     if payment_option == "A":
@@ -504,11 +530,12 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_OFFER_VALIDITY":        offer_validity if is_firm else "",
     }
 
+    # ── File setup ──────────────────────────────────────────────
     TEMPLATE_PATH = "template_Firm_FIXED.docx" if is_firm else "template_Budgetary_FIXED.docx"
 
     offer_short = "FIRM" if is_firm else "BUD"
     cust_short  = customer_company.split()[0].upper().strip(".,)")
-    SKIP = {"FOR","THE","OF","AND","IN","A","AN","PKG","WORKS","-","PROJECT"}
+    SKIP        = {"FOR","THE","OF","AND","IN","A","AN","PKG","WORKS","-","PROJECT"}
     proj_short  = "".join(w for w in project_name.split() if w.upper() not in SKIP)[:12].upper()
     try:
         date_str = datetime.strptime(offer_date.strip(), "%d %B %Y").strftime("%Y%m%d")
@@ -590,19 +617,11 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 break
 
     # ── PASS 4: Cancellation table patch ───────────────────────
+    # Uses dedicated function that directly indexes doc.tables[3]
+    # col 2 = Cancellation column
+    # Template values: 5%, 45%, 90%, 100%  → rewrite with minus signs
     if is_firm:
-        val_for_90 = "-90%" if cancel_rate_90 else "-80%"
-        cancel_map = {"5%": "-5%", "45%": "-45%", "90%": val_for_90, "100%": "-100%"}
-        cancel_table = doc.tables[3]
-        target_col = 2
-        for row in cancel_table.rows:
-            cell = row.cells[target_col]
-            for para in cell.paragraphs:
-                t = para.text.strip()
-                if t in cancel_map:
-                    for r in para.runs:
-                        if r.text.strip() in cancel_map:
-                            r.text = r.text.replace(r.text.strip(), cancel_map[r.text.strip()])
+        patch_cancellation_table(doc, cancel_rate_90)
 
     # ── PASS 5: Scope tables ────────────────────────────────────
     if len(doc.tables) > 1:
