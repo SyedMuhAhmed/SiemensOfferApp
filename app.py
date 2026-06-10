@@ -159,15 +159,11 @@ with col5:
 with col6:
     customer_fax = st.text_input("Fax (or leave blank)")
 
-if is_budgetary:
-    col7, col8 = st.columns(2)
-    with col7:
-        customer_tel = st.text_input("Tel (e.g. +971 2 6262 800, or leave blank)")
-    with col8:
-        customer_mob = st.text_input("Mobile (or leave blank)")
-else:
+col7, col8 = st.columns(2)
+with col7:
     customer_tel = st.text_input("Tel (e.g. +971 2 6262 800, or leave blank)")
-    customer_mob = ""
+with col8:
+    customer_mob = st.text_input("Mobile (or leave blank)")
 
 col9, col10 = st.columns(2)
 with col9:
