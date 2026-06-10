@@ -1,4 +1,4 @@
-import streamlit as st
+app_code = '''import streamlit as st
 import shutil
 from docx import Document
 from docx.shared import Pt
@@ -13,7 +13,6 @@ st.markdown("""
 &lt;style&gt;
     .main-header { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.2rem; }
     .section-header { font-size: 1.3rem; font-weight: 600; color: #16213e; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-    .stRadio &gt; div { flex-direction: row; gap: 2rem; }
     hr { margin: 1rem 0; }
 &lt;/style&gt;
 """, unsafe_allow_html=True)
@@ -57,14 +56,11 @@ def number_to_words(n):
         return ""
 
 def clear_highlight(run):
-    """Remove highlight from a run using XML manipulation (reliable method)."""
     rPr = run._r.get_or_add_rPr()
-    # Remove existing highlight element
-    for hl in rPr.findall(qn('w:highlight')):
+    for hl in rPr.findall(qn("w:highlight")):
         rPr.remove(hl)
 
 def fill(run, text):
-    """Replace run text and remove highlight."""
     run.text = text
     run.font.highlight_color = None
     clear_highlight(run)
@@ -87,7 +83,7 @@ def fill_table(table, items):
         while ri + 1 &gt;= len(table.rows):
             table.add_row()
         row = table.rows[ri + 1]
-        vals = [item.get("no", str(ri + 1)), item.get("desc", ""), item.get("qty", ""), item.get("total", "")]
+        vals = [item.get("no", str(ri+1)), item.get("desc", ""), item.get("qty", ""), item.get("total", "")]
         for ci, val in enumerate(vals):
             if ci &lt; len(row.cells):
                 p = row.cells[ci].paragraphs[0]
@@ -99,16 +95,11 @@ def fill_table(table, items):
                     r2.font.size = Pt(9)
 
 def replace_multi_placeholder_run(run, replacements):
-    """
-    Handle a single run that contains multiple INSERT_ placeholders
-    e.g. 'INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).'
-    Replaces all INSERT_ tokens found in the run text.
-    """
     text = run.text
     def replacer(m):
         key = m.group(0)
         return replacements.get(key, key)
-    new_text = re.sub(r'INSERT_\w+', replacer, text)
+    new_text = re.sub(r"INSERT_\\w+", replacer, text)
     if new_text != text:
         run.text = new_text
         clear_highlight(run)
@@ -168,15 +159,14 @@ with col5:
 with col6:
     customer_fax = st.text_input("Fax (or leave blank)")
 
-# Tel and Mobile row - Mobile only shows for Budgetary
 if is_budgetary:
     col7, col8 = st.columns(2)
     with col7:
-        customer_tel = st.text_input("Tel (e.g. +971 2 6262 800 Ext:33, or leave blank)")
+        customer_tel = st.text_input("Tel (e.g. +971 2 6262 800, or leave blank)")
     with col8:
         customer_mob = st.text_input("Mobile (or leave blank)")
 else:
-    customer_tel = st.text_input("Tel (e.g. +971 2 6262 800 Ext:33, or leave blank)")
+    customer_tel = st.text_input("Tel (e.g. +971 2 6262 800, or leave blank)")
     customer_mob = ""
 
 col9, col10 = st.columns(2)
@@ -328,10 +318,9 @@ if is_firm:
     else:
         signatories = signatory_sel
 
-    # Cancellation rate option (National vs International)
-    st.markdown("**Cancellation Rate (9–12 weeks row)**")
+    st.markdown("**Cancellation Rate (9-12 weeks row)**")
     cancel_rate_sel = st.radio(
-        "Select the cancellation % for the '9–12 weeks' row:",
+        "Select the cancellation % for the 9-12 weeks row:",
         ["-80%  (National / UAE-based customer)", "-90%  (International customer)"],
         horizontal=True
     )
@@ -394,7 +383,7 @@ st.markdown("---")
 # ─────────────────────────────────────────────────────────────
 
 st.markdown('&lt;div class="section-header"&gt;📦 Scope of Supply&lt;/div&gt;', unsafe_allow_html=True)
-st.caption("Enter each line item below. Format: Description | Qty | Total Price")
+st.caption("Enter each line item below.")
 
 num_scope = st.number_input("Number of scope items", min_value=1, max_value=20, value=1, step=1)
 scope_items = []
@@ -402,11 +391,11 @@ for i in range(int(num_scope)):
     st.markdown(f"**Item {i+1}**")
     col_sc1, col_sc2, col_sc3 = st.columns([4, 1, 2])
     with col_sc1:
-        desc = st.text_input(f"Description", key=f"scope_desc_{i}")
+        desc = st.text_input("Description", key=f"scope_desc_{i}")
     with col_sc2:
-        qty = st.text_input(f"Qty", key=f"scope_qty_{i}")
+        qty = st.text_input("Qty", key=f"scope_qty_{i}")
     with col_sc3:
-        total = st.text_input(f"Total Price", key=f"scope_total_{i}")
+        total = st.text_input("Total Price", key=f"scope_total_{i}")
     scope_items.append({"no": str(i+1), "desc": desc, "qty": qty, "total": total})
 
 st.markdown("**Optional Items** (leave blank if none)")
@@ -416,11 +405,11 @@ for i in range(int(num_opt)):
     st.markdown(f"**Optional Item {i+1}**")
     col_o1, col_o2, col_o3 = st.columns([4, 1, 2])
     with col_o1:
-        odesc = st.text_input(f"Description", key=f"opt_desc_{i}")
+        odesc = st.text_input("Description", key=f"opt_desc_{i}")
     with col_o2:
-        oqty = st.text_input(f"Qty", key=f"opt_qty_{i}")
+        oqty = st.text_input("Qty", key=f"opt_qty_{i}")
     with col_o3:
-        ototal = st.text_input(f"Total Price", key=f"opt_total_{i}")
+        ototal = st.text_input("Total Price", key=f"opt_total_{i}")
     optional_items.append({"no": str(i+1), "desc": odesc, "qty": oqty, "total": ototal})
 
 st.markdown("---")
@@ -431,7 +420,6 @@ st.markdown("---")
 
 if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=True):
 
-    # Validation
     errors = []
     if not customer_company or customer_company == "Other":
         errors.append("Customer Company")
@@ -456,23 +444,21 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         st.error(f"Please fill in the following required fields: {', '.join(errors)}")
         st.stop()
 
-    # Derived values
     customer_city = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
-    # Payment text
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
+            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\\n"
             f"80% of the contract value payable against presentation of shipping documents within {payment_days} days."
         )
     elif payment_option == "B":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
-            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
-            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
+            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\\n"
+            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\\n"
+            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\\n"
             f"50% of the contract value against Bill of Lading, payable within {payment_days} days."
         )
     else:
@@ -484,18 +470,12 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         if is_firm and import_port else ""
     )
 
-    # Format customer contact fields
     po_box_str = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
     tel_str    = f"Tel : {customer_tel}"         if customer_tel.strip()     else ""
     fax_str    = f"Fax: {customer_fax}"          if customer_fax.strip()     else ""
     mob_str    = f"Mob: {customer_mob}"          if customer_mob.strip()     else ""
     ref_str    = reference_no.strip()
 
-    # ── Replacement map ──────────────────────────────────────
-    # NOTE: INSERT_TOTAL_PRICE_WORDS value must NOT include currency prefix
-    # because the run that contains it also has INSERT_CURRENCY_CODE prepended.
-    # The combined run text is: "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS)."
-    # After regex substitution this becomes: "{EUR} {One Hundred...} Only)."
     replacements = {
         "INSERT_CUSTOMER_COMPANY":      customer_company,
         "INSERT_CUSTOMER_PO_BOX":       po_box_str,
@@ -516,8 +496,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_CURRENCY_FULL":         currency_full,
         "INSERT_TOTAL_PRICE_NUM":       total_price_num,
         "INSERT_CURRENCY_CODE":         currency_code,
-        # This value is used in the combined run: "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS)."
-        # After regex sub: "EUR One Hundred Seventy Five Thousand Only)."
         "INSERT_TOTAL_PRICE_WORDS":     f"{total_price_words} Only",
         "INSERT_INCOTERM_NAME":         incoterm_name,
         "INSERT_DELIVERY_MONTHS":       f"{delivery_months} month(s)",
@@ -530,11 +508,10 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_OFFER_VALIDITY":        offer_validity if is_firm else "",
     }
 
-    # File setup
     TEMPLATE_PATH = "template_Firm_FIXED.docx" if is_firm else "template_Budgetary_FIXED.docx"
 
     offer_short = "FIRM" if is_firm else "BUD"
-    cust_short  = customer_company.split()[0].upper().strip(".,")
+    cust_short  = customer_company.split()[0].upper().strip(".,)")
     SKIP = {"FOR","THE","OF","AND","IN","A","AN","PKG","WORKS","-","PROJECT"}
     proj_short  = "".join(w for w in project_name.split() if w.upper() not in SKIP)[:12].upper()
     try:
@@ -547,15 +524,13 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     shutil.copy(TEMPLATE_PATH, filepath)
     doc = Document(filepath)
 
-    # ── PASS 1: Apply all INSERT_ replacements ───────────────
+    # PASS 1: Apply all INSERT_ replacements
     for para in all_paras(doc):
         hrs = [r for r in para.runs if r.font.highlight_color is not None]
         if not hrs:
             continue
 
-        # Merge split highlighted runs (up to 3 consecutive)
-        # e.g. ['INSERT', '_END_USER'] -&gt; 'INSERT_END_USER'
-        # e.g. ['INSERT_SENDER_', 'EMAIL'] -&gt; 'INSERT_SENDER_EMAIL'
+        # Merge split highlighted runs
         i = 0
         while i &lt; len(hrs) - 1:
             combined2 = (hrs[i].text or "") + (hrs[i+1].text or "")
@@ -566,29 +541,23 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 hrs[i+1].font.highlight_color = None
             i += 1
 
-        # Now do replacements - handle both single-placeholder and multi-placeholder runs
+        # Replace single or multi-placeholder runs
         for r in hrs:
             key = (r.text or "").strip()
             if key in replacements:
-                # Single exact placeholder
                 fill(r, replacements[key])
             elif "INSERT_" in (r.text or ""):
-                # Run contains multiple placeholders or partial - use regex sub
                 replace_multi_placeholder_run(r, replacements)
 
-    # ── PASS 2: Clear ALL remaining highlights in document ───
-    # This handles label runs like "Reference No.", "Name", "Department" etc.
-    # that are highlighted in the template but are not INSERT_ placeholders.
+    # PASS 2: Clear ALL remaining highlights
     for para in all_paras(doc):
         for r in para.runs:
             if r.font.highlight_color is not None:
-                # Only clear if it's NOT an unfilled INSERT_ (shouldn't happen after pass 1)
                 clear_highlight(r)
                 r.font.highlight_color = None
 
-    # ── PASS 3: Firm style patches ───────────────────────────
+    # PASS 3: Firm style patches
     if is_firm:
-        # "The offer currency is..." paragraph
         for para in all_paras(doc):
             if para.text.strip().startswith("The offer currency is"):
                 for r in para.runs:
@@ -602,7 +571,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         r.text = ""
                 break
 
-        # "The delivery period..." paragraph
         for para in all_paras(doc):
             if para.text.strip().startswith("The delivery period of the offered equipment is estimated to be"):
                 for r in para.runs:
@@ -614,7 +582,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         r.text = ""
                 break
 
-        # "valid until" paragraph
         for para in all_paras(doc):
             if "valid until" in para.text:
                 replaced = False
@@ -628,9 +595,8 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         r.text = ""
                 break
 
-    # ── PASS 4: Cancellation table patch ────────────────────
+    # PASS 4: Cancellation table patch
     if is_firm:
-        # Determine the 90% row value based on user selection
         val_for_90 = "-90%" if cancel_rate_90 else "-80%"
         cancel_map = {"5%": "-5%", "45%": "-45%", "90%": val_for_90, "100%": "-100%"}
         for para in all_paras(doc):
@@ -640,25 +606,24 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                     if r.text.strip() in cancel_map:
                         r.text = r.text.replace(r.text.strip(), cancel_map[r.text.strip()])
 
-    # ── PASS 5: Scope tables ─────────────────────────────────
+    # PASS 5: Scope tables
     if len(doc.tables) &gt; 1:
         fill_table(doc.tables[1], scope_items)
     if optional_items and len(doc.tables) &gt; 2:
         fill_table(doc.tables[2], optional_items)
 
-    # ── PASS 6: Final cleanup - remove any remaining INSERT_ tokens ──
+    # PASS 6: Final cleanup
     for para in all_paras(doc):
         for r in para.runs:
             if r.text and "INSERT_" in r.text:
-                r.text = re.sub(r'INSERT_\w+', "", r.text)
-            # Also clear any remaining highlights
+                r.text = re.sub(r"INSERT_\\w+", "", r.text)
             if r.font.highlight_color is not None:
                 clear_highlight(r)
                 r.font.highlight_color = None
 
     doc.save(filepath)
 
-    st.success(f"✅ Offer letter generated successfully!")
+    st.success("✅ Offer letter generated successfully!")
     with open(filepath, "rb") as f:
         st.download_button(
             label=f"📥 Download {filename}",
@@ -669,13 +634,16 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         )
 '''
 
+import ast
+try:
+    ast.parse(app_code)
+    print("✅ Syntax OK")
+except SyntaxError as e:
+    print(f"❌ SyntaxError at line {e.lineno}: {e.msg}")
+    print(f"   Text: {e.text}")
+
 with open('/tmp/app.py', 'w', encoding='utf-8') as f:
     f.write(app_code)
 
-print("app.py written successfully")
-print(f"Size: {len(app_code)} chars")
-
-
-
-
-
+print(f"Lines: {len(app_code.splitlines())}")
+print(f"Chars: {len(app_code)}")
