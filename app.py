@@ -589,11 +589,17 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         r.text = ""
                 break
 
-    # PASS 4: Cancellation table patch
-    if is_firm:
-        val_for_90 = "-90%" if cancel_rate_90 else "-80%"
-        cancel_map = {"5%": "-5%", "45%": "-45%", "90%": val_for_90, "100%": "-100%"}
-        for para in all_paras(doc):
+  # PASS 4: Cancellation table patch
+if is_firm:
+    val_for_90 = "-90%" if cancel_rate_90 else "-80%"
+    cancel_map = {"5%": "-5%", "45%": "-45%", "90%": val_for_90, "100%": "-100%"}
+
+    cancel_table = doc.tables[3]  # cancellation table is always index 3
+    target_col = 2                # "Cancellation" column
+
+    for row in cancel_table.rows:
+        cell = row.cells[target_col]
+        for para in cell.paragraphs:
             t = para.text.strip()
             if t in cancel_map:
                 for r in para.runs:
