@@ -13,24 +13,17 @@ st.set_page_config(page_title="Siemens Offer Letter Generator", page_icon="asset
 # SIEMENS PROFESSIONAL THEME
 # ─────────────────────────────────────────────────────────────
 st.markdown("""
-&lt;style&gt;
-    /* ── Google Font: Source Sans 3 (clean, corporate) ── */
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&amp;display=swap');
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 
-    /* ── Global reset ── */
     html, body, [class*="css"] {
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
     }
-
-    /* ── Page background ── */
     .stApp {
         background-color: #f0f2f5;
     }
-
-    /* ── Hide Streamlit default chrome ── */
     #MainMenu, footer, header { visibility: hidden; }
 
-    /* ── Top banner ── */
     .siemens-banner {
         background: linear-gradient(135deg, #009999 0%, #007a7a 60%, #005f5f 100%);
         border-radius: 6px;
@@ -67,8 +60,6 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.28);
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
     }
-
-    /* ── Section cards ── */
     .section-card {
         background: #ffffff;
         border-radius: 6px;
@@ -77,8 +68,6 @@ st.markdown("""
         border: 1px solid #dde2ea;
         box-shadow: 0 1px 5px rgba(0,0,0,0.05);
     }
-
-    /* ── Section header ── */
     .section-header {
         font-size: 0.78rem;
         font-weight: 700;
@@ -92,11 +81,8 @@ st.markdown("""
         align-items: center;
         gap: 10px;
     }
-
-    /* ── Divider ── */
     hr { border: none; border-top: 1px solid #e4e8ef; margin: 18px 0; }
 
-    /* ── Input labels ── */
     label, .stSelectbox label, .stTextInput label,
     .stNumberInput label, .stTextArea label, .stRadio label {
         font-size: 0.78rem !important;
@@ -106,11 +92,9 @@ st.markdown("""
         letter-spacing: 0.5px !important;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif !important;
     }
-
-    /* ── Input boxes ── */
-    .stTextInput &gt; div &gt; div &gt; input,
-    .stTextArea &gt; div &gt; div &gt; textarea,
-    .stNumberInput &gt; div &gt; div &gt; input {
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stNumberInput > div > div > input {
         border: 1.5px solid #cbd5e0 !important;
         border-radius: 4px !important;
         font-size: 0.9rem !important;
@@ -119,26 +103,20 @@ st.markdown("""
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif !important;
         transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .stTextInput &gt; div &gt; div &gt; input:focus,
-    .stTextArea &gt; div &gt; div &gt; textarea:focus {
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
         border-color: #009999 !important;
         background: #ffffff !important;
         box-shadow: 0 0 0 3px rgba(0,153,153,0.10) !important;
     }
-
-    /* ── Selectbox ── */
-    .stSelectbox &gt; div &gt; div {
+    .stSelectbox > div > div {
         border: 1.5px solid #cbd5e0 !important;
         border-radius: 4px !important;
         background: #fafbfc !important;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif !important;
     }
-
-    /* ── Radio buttons ── */
-    .stRadio &gt; div {
-        gap: 8px;
-    }
-    .stRadio &gt; div &gt; label {
+    .stRadio > div { gap: 8px; }
+    .stRadio > div > label {
         background: #f7f9fc;
         border: 1.5px solid #dde2ea;
         border-radius: 4px;
@@ -152,14 +130,12 @@ st.markdown("""
         cursor: pointer;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif !important;
     }
-    .stRadio &gt; div &gt; label:hover {
+    .stRadio > div > label:hover {
         border-color: #009999;
         background: #f0fafa;
         color: #007a7a !important;
     }
-
-    /* ── Primary button ── */
-    .stButton &gt; button[kind="primary"] {
+    .stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #009999 0%, #007a7a 100%) !important;
         color: #ffffff !important;
         border: none !important;
@@ -173,14 +149,12 @@ st.markdown("""
         transition: all 0.15s !important;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif !important;
     }
-    .stButton &gt; button[kind="primary"]:hover {
+    .stButton > button[kind="primary"]:hover {
         background: linear-gradient(135deg, #00b3b3 0%, #009999 100%) !important;
         box-shadow: 0 5px 18px rgba(0,153,153,0.40) !important;
         transform: translateY(-1px);
     }
-
-    /* ── Download button ── */
-    .stDownloadButton &gt; button {
+    .stDownloadButton > button {
         background: #ffffff !important;
         color: #009999 !important;
         border: 2px solid #009999 !important;
@@ -193,28 +167,20 @@ st.markdown("""
         transition: all 0.15s !important;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif !important;
     }
-    .stDownloadButton &gt; button:hover {
+    .stDownloadButton > button:hover {
         background: #009999 !important;
         color: #ffffff !important;
         box-shadow: 0 3px 12px rgba(0,153,153,0.28) !important;
     }
-
-    /* ── Alert / info boxes ── */
     .stAlert[data-baseweb="notification"] {
         border-radius: 4px !important;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif !important;
     }
-
-    /* ── Number input ── */
-    .stNumberInput &gt; div { border-radius: 4px !important; }
-
-    /* ── Caption / helper text ── */
+    .stNumberInput > div { border-radius: 4px !important; }
     .stCaption, small {
         color: #718096 !important;
         font-size: 0.80rem !important;
     }
-
-    /* ── Scope item cards ── */
     .scope-item-card {
         background: #f7f9fc;
         border: 1px solid #dde2ea;
@@ -231,8 +197,6 @@ st.markdown("""
         letter-spacing: 0.8px;
         margin-bottom: 10px;
     }
-
-    /* ── Filename preview pill ── */
     .filename-pill {
         display: inline-block;
         background: #e6f7f7;
@@ -246,8 +210,6 @@ st.markdown("""
         letter-spacing: 0.2px;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
     }
-
-    /* ── Contact info boxes ── */
     .contact-info-box {
         background: #f0fafa;
         border: 1px solid #009999;
@@ -266,8 +228,6 @@ st.markdown("""
         display: block;
         margin-bottom: 2px;
     }
-
-    /* ── Footer ── */
     .siemens-footer {
         text-align: center;
         color: #a0aec0;
@@ -278,12 +238,7 @@ st.markdown("""
         letter-spacing: 0.3px;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
     }
-    .siemens-footer strong {
-        color: #009999;
-        font-weight: 600;
-    }
-
-    /* ── Step badge ── */
+    .siemens-footer strong { color: #009999; font-weight: 600; }
     .step-badge {
         display: inline-flex;
         align-items: center;
@@ -298,8 +253,6 @@ st.markdown("""
         flex-shrink: 0;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
     }
-
-    /* ── Offer type info box ── */
     .offer-type-info {
         background: #f0fafa;
         border-left: 3px solid #009999;
@@ -310,20 +263,20 @@ st.markdown("""
         margin-top: 10px;
         font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
     }
-&lt;/style&gt;
+</style>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # TOP BANNER
 # ─────────────────────────────────────────────────────────────
 st.markdown("""
-&lt;div class="siemens-banner"&gt;
-    &lt;div class="siemens-banner-left"&gt;
-        &lt;h1&gt;Offer Letter Generator&lt;/h1&gt;
-        &lt;p&gt;Siemens Industrial LLC &amp;nbsp;&amp;middot;&amp;nbsp; Smart Document Automation &amp;nbsp;&amp;middot;&amp;nbsp; RC-AE SI EA S&lt;/p&gt;
-    &lt;/div&gt;
-    &lt;div class="siemens-logo-box"&gt;SIEMENS&lt;/div&gt;
-&lt;/div&gt;
+<div class="siemens-banner">
+    <div class="siemens-banner-left">
+        <h1>Offer Letter Generator</h1>
+        <p>Siemens Industrial LLC &nbsp;&middot;&nbsp; Smart Document Automation &nbsp;&middot;&nbsp; RC-AE SI EA S</p>
+    </div>
+    <div class="siemens-logo-box">SIEMENS</div>
+</div>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
@@ -344,15 +297,15 @@ def number_to_words(n):
     def helper(num):
         if num == 0:
             return ""
-        elif num &lt; 20:
+        elif num < 20:
             return ones[num]
-        elif num &lt; 100:
+        elif num < 100:
             return tens[num // 10] + (" " + ones[num % 10] if num % 10 != 0 else "")
-        elif num &lt; 1000:
+        elif num < 1000:
             return ones[num // 100] + " Hundred" + (" " + helper(num % 100) if num % 100 != 0 else "")
-        elif num &lt; 1_000_000:
+        elif num < 1_000_000:
             return helper(num // 1000) + " Thousand" + (" " + helper(num % 1000) if num % 1000 != 0 else "")
-        elif num &lt; 1_000_000_000:
+        elif num < 1_000_000_000:
             return helper(num // 1_000_000) + " Million" + (" " + helper(num % 1_000_000) if num % 1_000_000 != 0 else "")
         else:
             return helper(num // 1_000_000_000) + " Billion" + (" " + helper(num % 1_000_000_000) if num % 1_000_000_000 != 0 else "")
@@ -440,13 +393,13 @@ def merge_and_replace(para, replacements):
 
 def fill_table(table, items):
     for ri, item in enumerate(items):
-        while ri + 1 &gt;= len(table.rows):
+        while ri + 1 >= len(table.rows):
             table.add_row()
         row = table.rows[ri + 1]
         vals = [item.get("no", str(ri + 1)), item.get("desc", ""),
                 item.get("qty", ""), item.get("total", "")]
         for ci, val in enumerate(vals):
-            if ci &lt; len(row.cells):
+            if ci < len(row.cells):
                 p = row.cells[ci].paragraphs[0]
                 if p.runs:
                     p.runs[0].text = val
@@ -459,20 +412,20 @@ def fill_table(table, items):
 # SECTION 1 - OFFER TYPE
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;1&lt;/span&gt;Offer Type&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">1</span>Offer Type</div>', unsafe_allow_html=True)
 offer_type = st.radio("Select the type of commercial offer to generate:", ["Firm", "Budgetary"], horizontal=True)
 is_firm = (offer_type == "Firm")
 if is_firm:
-    st.markdown('&lt;div class="offer-type-info"&gt;&lt;strong&gt;Firm Offer&lt;/strong&gt; — Legally binding commercial offer with full terms, MFC date, validity, and signatories.&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown('<div class="offer-type-info"><strong>Firm Offer</strong> — Legally binding commercial offer with full terms, MFC date, validity, and signatories.</div>', unsafe_allow_html=True)
 else:
-    st.markdown('&lt;div class="offer-type-info"&gt;&lt;strong&gt;Budgetary Offer&lt;/strong&gt; — Non-binding indicative price offer for budgeting purposes only.&lt;/div&gt;', unsafe_allow_html=True)
-st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown('<div class="offer-type-info"><strong>Budgetary Offer</strong> — Non-binding indicative price offer for budgeting purposes only.</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 2 - CUSTOMER INFORMATION
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;2&lt;/span&gt;Customer Information&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">2</span>Customer Information</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -510,26 +463,26 @@ with col9:
 with col10:
     offer_date = st.text_input("Offer Date", placeholder="e.g. 15 April 2025")
 
-st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 3 - OFFER DETAILS
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;3&lt;/span&gt;Offer Details&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">3</span>Offer Details</div>', unsafe_allow_html=True)
 subject = st.text_input("Subject", placeholder="e.g. 33KV Switchgear Supply")
 col_od1, col_od2 = st.columns(2)
 with col_od1:
     project_name = st.text_input("Project Name", placeholder="e.g. PDHPP Project")
 with col_od2:
     end_user = st.text_input("End User", placeholder="e.g. STEP Spa")
-st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 4 - COMMERCIAL TERMS
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;4&lt;/span&gt;Commercial Terms&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">4</span>Commercial Terms</div>', unsafe_allow_html=True)
 
 col_c1, col_c2 = st.columns(2)
 with col_c1:
@@ -636,14 +589,14 @@ if is_firm:
 else:
     cancel_high = ""
 
-st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 5 - FIRM ONLY FIELDS
 # ─────────────────────────────────────────────────────────────
 
 if is_firm:
-    st.markdown('&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;5&lt;/span&gt;Firm Offer Details&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown('<div class="section-card"><div class="section-header"><span class="step-badge">5</span>Firm Offer Details</div>', unsafe_allow_html=True)
 
     install_options = {
         "UAE - Abu Dhabi (Dubai or Northern Emirates)": "the Emirate of Abu Dhabi (Dubai or Northern Emirates)",
@@ -670,7 +623,7 @@ if is_firm:
     ]
     signatory_sel = st.selectbox("Signatories", signatory_options)
     signatories = st.text_input("Enter Signatory Names", placeholder="Name 1 + Name 2 + ...") if signatory_sel == "Other" else signatory_sel
-    st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 else:
     import_port    = ""
     mfc_date       = ""
@@ -682,7 +635,7 @@ else:
 # ─────────────────────────────────────────────────────────────
 
 step_num = "6" if is_firm else "5"
-st.markdown(f'&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;{step_num}&lt;/span&gt;Sales Contact&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown(f'<div class="section-card"><div class="section-header"><span class="step-badge">{step_num}</span>Sales Contact</div>', unsafe_allow_html=True)
 
 sales_contacts = {
     "Ahmad Awny | RC-AE SI EA S VD-V-D | +971 55 2003541 | ahmad.awny@siemens.com":
@@ -713,53 +666,53 @@ else:
     sender_email  = sc["email"]
     col_si1, col_si2, col_si3 = st.columns(3)
     with col_si1:
-        st.markdown(f"&lt;div class='contact-info-box'&gt;&lt;span&gt;Email&lt;/span&gt;{sender_email}&lt;/div&gt;", unsafe_allow_html=True)
+        st.markdown(f"<div class='contact-info-box'><span>Email</span>{sender_email}</div>", unsafe_allow_html=True)
     with col_si2:
-        st.markdown(f"&lt;div class='contact-info-box'&gt;&lt;span&gt;Mobile&lt;/span&gt;{sender_mobile}&lt;/div&gt;", unsafe_allow_html=True)
+        st.markdown(f"<div class='contact-info-box'><span>Mobile</span>{sender_mobile}</div>", unsafe_allow_html=True)
     with col_si3:
-        st.markdown(f"&lt;div class='contact-info-box'&gt;&lt;span&gt;Department&lt;/span&gt;{sender_dept}&lt;/div&gt;", unsafe_allow_html=True)
+        st.markdown(f"<div class='contact-info-box'><span>Department</span>{sender_dept}</div>", unsafe_allow_html=True)
 
-st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 7 - SCOPE OF SUPPLY
 # ─────────────────────────────────────────────────────────────
 
 step_num2 = "7" if is_firm else "6"
-st.markdown(f'&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;{step_num2}&lt;/span&gt;Scope of Supply&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown(f'<div class="section-card"><div class="section-header"><span class="step-badge">{step_num2}</span>Scope of Supply</div>', unsafe_allow_html=True)
 
 num_scope = st.number_input("Number of Scope Items", min_value=1, max_value=20, value=1, step=1)
 scope_items = []
 for i in range(int(num_scope)):
-    st.markdown(f'&lt;div class="scope-item-card"&gt;&lt;div class="scope-item-label"&gt;Item {i+1}&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown(f'<div class="scope-item-card"><div class="scope-item-label">Item {i+1}</div>', unsafe_allow_html=True)
     col_sc1, col_sc2, col_sc3 = st.columns([4, 1, 2])
     with col_sc1: desc  = st.text_input("Description", key=f"scope_desc_{i}", placeholder="e.g. 33KV 8DA10 AIS NXAIR Switchgear Panel")
     with col_sc2: qty   = st.text_input("Qty",         key=f"scope_qty_{i}",  placeholder="e.g. 10")
     with col_sc3: total = st.text_input("Total Price", key=f"scope_total_{i}", placeholder="e.g. EUR 3,218,545")
     scope_items.append({"no": str(i+1), "desc": desc, "qty": qty, "total": total})
-    st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 st.markdown("**Optional Items**")
 num_opt = st.number_input("Number of Optional Items", min_value=0, max_value=10, value=0, step=1)
 optional_items = []
 for i in range(int(num_opt)):
-    st.markdown(f'&lt;div class="scope-item-card"&gt;&lt;div class="scope-item-label"&gt;Optional Item {i+1}&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown(f'<div class="scope-item-card"><div class="scope-item-label">Optional Item {i+1}</div>', unsafe_allow_html=True)
     col_o1, col_o2, col_o3 = st.columns([4, 1, 2])
     with col_o1: odesc  = st.text_input("Description", key=f"opt_desc_{i}")
     with col_o2: oqty   = st.text_input("Qty",         key=f"opt_qty_{i}")
     with col_o3: ototal = st.text_input("Total Price", key=f"opt_total_{i}")
     optional_items.append({"no": str(i+1), "desc": odesc, "qty": oqty, "total": ototal})
-    st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # SECTION 8 - OUTPUT FILENAME
 # ─────────────────────────────────────────────────────────────
 
 step_num3 = "8" if is_firm else "7"
-st.markdown(f'&lt;div class="section-card"&gt;&lt;div class="section-header"&gt;&lt;span class="step-badge"&gt;{step_num3}&lt;/span&gt;Output Filename&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown(f'<div class="section-card"><div class="section-header"><span class="step-badge">{step_num3}</span>Output Filename</div>', unsafe_allow_html=True)
 
 offer_short_prev = "FIRM" if is_firm else "BUD"
 cust_short_prev  = customer_company.split()[0].upper().strip(".,)") if customer_company else "CUSTOMER"
@@ -787,14 +740,14 @@ if filename_mode == "Custom":
 else:
     final_filename = auto_filename + ".docx"
 
-st.markdown(f'&lt;div class="filename-pill"&gt;Output file: {final_filename}&lt;/div&gt;', unsafe_allow_html=True)
-st.markdown('&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown(f'<div class="filename-pill">Output file: {final_filename}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
 # GENERATE
 # ─────────────────────────────────────────────────────────────
 
-st.markdown("&lt;br&gt;", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 if st.button("Generate Offer Letter", type="primary", use_container_width=True):
 
     errors = []
@@ -853,37 +806,37 @@ if st.button("Generate Offer Letter", type="primary", use_container_width=True):
     price_words_run = f"{currency_code} {total_price_words} Only)."
 
     replacements = {
-        "INSERT_CUSTOMER_COMPANY":                          customer_company,
-        "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM":            po_box_full,
-        "INSERT_CUSTOMER_CITY_FULL":                        customer_city,
-        "INSERT_CUSTOMER_ATTN":                             f"Kind Attn: {customer_attn}",
-        "INSERT_CUSTOMER_TEL_LINE":                         tel_str,
-        "INSERT_CUSTOMER_FAX_LINE":                         fax_str,
-        "INSERT_CUSTOMER_MOB_LINE":                         mob_str,
-        "INSERT_SENDER_NAME":                               sender_name,
-        "INSERT_SENDER_DEPT":                               sender_dept,
-        "INSERT_SENDER_MOBILE":                             sender_mobile,
-        "INSERT_SENDER_EMAIL":                              sender_email,
-        "INSERT_OFFER_DATE":                                offer_date,
-        "INSERT_REFERENCE_NO":                              reference_no.strip(),
-        "INSERT_SUBJECT_FULL":                              subject,
-        "INSERT_PROJECT_NAME":                              project_name,
-        "INSERT_END_USER":                                  end_user,
-        "INSERT_CURRENCY_FULL":                             currency_full,
-        "INSERT_TOTAL_PRICE_NUM":                           total_price_num,
-        "INSERT_CURRENCY_CODE":                             currency_code,
-        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":  price_words_run,
+        "INSERT_CUSTOMER_COMPANY":                              customer_company,
+        "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM":                po_box_full,
+        "INSERT_CUSTOMER_CITY_FULL":                            customer_city,
+        "INSERT_CUSTOMER_ATTN":                                 f"Kind Attn: {customer_attn}",
+        "INSERT_CUSTOMER_TEL_LINE":                             tel_str,
+        "INSERT_CUSTOMER_FAX_LINE":                             fax_str,
+        "INSERT_CUSTOMER_MOB_LINE":                             mob_str,
+        "INSERT_SENDER_NAME":                                   sender_name,
+        "INSERT_SENDER_DEPT":                                   sender_dept,
+        "INSERT_SENDER_MOBILE":                                 sender_mobile,
+        "INSERT_SENDER_EMAIL":                                  sender_email,
+        "INSERT_OFFER_DATE":                                    offer_date,
+        "INSERT_REFERENCE_NO":                                  reference_no.strip(),
+        "INSERT_SUBJECT_FULL":                                  subject,
+        "INSERT_PROJECT_NAME":                                  project_name,
+        "INSERT_END_USER":                                      end_user,
+        "INSERT_CURRENCY_FULL":                                 currency_full,
+        "INSERT_TOTAL_PRICE_NUM":                               total_price_num,
+        "INSERT_CURRENCY_CODE":                                 currency_code,
+        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":      price_words_run,
         "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS Only).": price_words_run,
-        "INSERT_INCOTERM_NAME":                             incoterm_name,
-        "INSERT_DELIVERY_MONTHS":                           f"{delivery_months} month(s)",
-        "INSERT_WARRANTY_MONTHS":                           f"{warranty_months} months",
-        "INSERT_PAYMENT_OPTION_HEADER":                     pay_header,
-        "INSERT_PAYMENT_OPTION_LINE":                       pay_lines,
-        "INSERT_PAYMENT_OPTION_LINES":                      pay_lines,
-        "INSERT_MFC_DATE":                                  mfc_date if is_firm else "",
-        "INSERT_IMPORT_PORT_SENTENCE":                      import_port_sentence,
-        "INSERT_OFFER_VALIDITY":                            offer_validity if is_firm else "",
-        "INSERT_CANCEL_HIGH":                               cancel_high,
+        "INSERT_INCOTERM_NAME":                                 incoterm_name,
+        "INSERT_DELIVERY_MONTHS":                               f"{delivery_months} month(s)",
+        "INSERT_WARRANTY_MONTHS":                               f"{warranty_months} months",
+        "INSERT_PAYMENT_OPTION_HEADER":                         pay_header,
+        "INSERT_PAYMENT_OPTION_LINE":                           pay_lines,
+        "INSERT_PAYMENT_OPTION_LINES":                          pay_lines,
+        "INSERT_MFC_DATE":                                      mfc_date if is_firm else "",
+        "INSERT_IMPORT_PORT_SENTENCE":                          import_port_sentence,
+        "INSERT_OFFER_VALIDITY":                                offer_validity if is_firm else "",
+        "INSERT_CANCEL_HIGH":                                   cancel_high,
     }
 
     TEMPLATE_PATH = (
@@ -902,7 +855,7 @@ if st.button("Generate Offer Letter", type="primary", use_container_width=True):
     for para in all_paras(doc):
         runs = para.runs
         i = 0
-        while i &lt; len(runs) - 1:
+        while i < len(runs) - 1:
             r0, r1 = runs[i], runs[i + 1]
             if "INSERT_" in (r0.text or "") and "INSERT_" in (r1.text or ""):
                 combined = (r0.text or "") + (r1.text or "")
@@ -928,9 +881,9 @@ if st.button("Generate Offer Letter", type="primary", use_container_width=True):
                     r.text = new_text
                     clear_highlight(r)
 
-    if len(doc.tables) &gt; 1:
+    if len(doc.tables) > 1:
         fill_table(doc.tables[1], scope_items)
-    if optional_items and len(doc.tables) &gt; 2:
+    if optional_items and len(doc.tables) > 2:
         fill_table(doc.tables[2], optional_items)
 
     for para in all_paras(doc):
@@ -957,8 +910,8 @@ if st.button("Generate Offer Letter", type="primary", use_container_width=True):
 # FOOTER
 # ─────────────────────────────────────────────────────────────
 st.markdown("""
-&lt;div class="siemens-footer"&gt;
-    &lt;strong&gt;Siemens Industrial LLC&lt;/strong&gt; &amp;nbsp;&amp;middot;&amp;nbsp; Offer Letter Generator &amp;nbsp;&amp;middot;&amp;nbsp;
-    RC-AE SI EA S &amp;nbsp;&amp;middot;&amp;nbsp; Internal Use Only
-&lt;/div&gt;
+<div class="siemens-footer">
+    <strong>Siemens Industrial LLC</strong> &nbsp;&middot;&nbsp; Offer Letter Generator &nbsp;&middot;&nbsp;
+    RC-AE SI EA S &nbsp;&middot;&nbsp; Internal Use Only
+</div>
 """, unsafe_allow_html=True)
