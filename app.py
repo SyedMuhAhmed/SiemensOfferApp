@@ -142,7 +142,6 @@ col7, col8 = st.columns(2)
 with col7:
     customer_tel = st.text_input("Tel (or leave blank)")
 with col8:
-    # Mobile shown for BOTH Firm and Budgetary
     customer_mob = st.text_input("Mobile (or leave blank)")
 
 col9, col10 = st.columns(2)
@@ -194,32 +193,76 @@ with col_c4:
     delivery_sel = st.selectbox("Delivery Period (months)", delivery_options)
     delivery_months = st.text_input("Enter months") if delivery_sel == "Other" else delivery_sel
 
-col_c5, col_c6 = st.columns(2)
+col_c5, _ = st.columns(2)
 with col_c5:
     warranty_options = ["12", "18", "24", "Other"]
     warranty_sel = st.selectbox("Warranty Period (months)", warranty_options)
     warranty_months = st.text_input("Enter warranty months") if warranty_sel == "Other" else warranty_sel
-with col_c6:
-    payment_days_options = ["30", "45", "60", "90", "120", "Other"]
-    payment_days_sel = st.selectbox("Payment Days", payment_days_options)
-    payment_days = st.text_input("Enter days") if payment_days_sel == "Other" else payment_days_sel
 
 # ── Payment Option ───────────────────────────────────────────
-payment_option_options = [
-    "Option A - 20% down payment + 80% against shipping documents",
-    "Option B - 20% advance + 10% drawings + 20% MFC + 50% bill of lading",
-    "Other"
+st.markdown("**Payment Option**")
+
+payment_option_labels = [
+    "Option A — 20% down payment + 80% against shipping documents",
+    "Option B — 20% advance + 10% drawings + 20% MFC + 50% bill of lading",
+    "Option C — Custom payment terms",
 ]
-payment_option_sel = st.selectbox("Payment Option", payment_option_options)
+payment_option_sel = st.radio(
+    "Select payment structure",
+    payment_option_labels,
+    label_visibility="collapsed",
+)
+
 if payment_option_sel.startswith("Option A"):
     payment_option = "A"
-    custom_payment = ""
+    custom_payment_text = ""
+    col_pd1, col_pd2 = st.columns([1, 3])
+    with col_pd1:
+        payment_days_options = ["30", "45", "60", "90", "120", "Other"]
+        payment_days_sel = st.selectbox("Payment Days", payment_days_options, key="pd_A")
+        payment_days = st.text_input("Enter days", key="pd_A_custom") if payment_days_sel == "Other" else payment_days_sel
+
 elif payment_option_sel.startswith("Option B"):
     payment_option = "B"
-    custom_payment = ""
+    custom_payment_text = ""
+    col_pd1, col_pd2 = st.columns([1, 3])
+    with col_pd1:
+        payment_days_options = ["30", "45", "60", "90", "120", "Other"]
+        payment_days_sel = st.selectbox("Payment Days", payment_days_options, key="pd_B")
+        payment_days = st.text_input("Enter days", key="pd_B_custom") if payment_days_sel == "Other" else payment_days_sel
+
 else:
-    payment_option = "Other"
-    custom_payment = st.text_area("Enter custom payment terms")
+    # Option C — Custom
+    payment_option = "C"
+    custom_payment_text = st.text_area(
+        "Enter custom payment terms",
+        placeholder=(
+            "e.g.\n"
+            "100% of the contract value payable against the date of "
+            "delivery documents within 90 days."
+        ),
+        height=120,
+        key="custom_payment_text",
+    )
+    col_pd1, col_pd2 = st.columns([1, 3])
+    with col_pd1:
+        payment_days_options = ["30", "45", "60", "90", "120", "Other"]
+        payment_days_sel = st.selectbox(
+            "Payment Days (for header)",
+            payment_days_options,
+            key="pd_C",
+            help="Used in the section header line only — e.g. 'Payment terms: 90 days'",
+        )
+        payment_days = (
+            st.text_input("Enter days", key="pd_C_custom")
+            if payment_days_sel == "Other"
+            else payment_days_sel
+        )
+    with col_pd2:
+        st.info(
+            f"📌 Header will read: **Payment terms: {payment_days} days from delivery documents**\n\n"
+            "The text above will be inserted verbatim into the document."
+        )
 
 # ── Cancellation High % (Firm only) ─────────────────────────
 if is_firm:
@@ -351,6 +394,8 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     if not project_name:    errors.append("Project Name")
     if not end_user:        errors.append("End User")
     if not total_price_num: errors.append("Total Price")
+    if payment_option == "C" and not custom_payment_text.strip():
+        errors.append("Custom Payment Terms (Option C cannot be empty)")
     if is_firm and not mfc_date:       errors.append("MFC Date")
     if is_firm and not offer_validity: errors.append("Offer Validity")
     if errors:
@@ -361,7 +406,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     customer_city     = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
-    # Payment text
+    # ── Payment text ─────────────────────────────────────────
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
@@ -383,63 +428,53 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             f"(Bill of Lading), payable within {payment_days} days."
         )
     else:
-        pay_header = "Payment terms: As per agreement"
-        pay_lines  = custom_payment
+        # Option C — verbatim custom text
+        pay_header = f"Payment terms: {payment_days} days from delivery documents"
+        pay_lines  = custom_payment_text.strip()
 
-    # Import port sentence (Firm only)
+    # ── Import port sentence (Firm only) ─────────────────────
     import_port_sentence = (
         f"The scope shall be offloaded in and imported via a port of {import_port}."
         if is_firm and import_port else ""
     )
 
     # ── Build formatted line strings ─────────────────────────
-    # P. O. Box line: whole run is the tag, replace entire run text
-    po_box_full   = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
-    tel_str       = f"Tel : {customer_tel}"         if customer_tel.strip()    else ""
-    fax_str       = f"Fax: {customer_fax}"          if customer_fax.strip()    else ""
-    mob_str       = f"Mob: {customer_mob}"          if customer_mob.strip()    else ""
+    po_box_full = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
+    tel_str     = f"Tel : {customer_tel}"         if customer_tel.strip()    else ""
+    fax_str     = f"Fax: {customer_fax}"          if customer_fax.strip()    else ""
+    mob_str     = f"Mob: {customer_mob}"          if customer_mob.strip()    else ""
 
-    # Price words run value  →  "EUR Three Million ... Only)."
     price_words_run = f"{currency_code} {total_price_words} Only)."
 
-    # ── Replacements map (keys = EXACT tag text in template) ─
-    # NOTE: "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM" is the full run text
+    # ── Replacements map ─────────────────────────────────────
     replacements = {
-        # ── Customer block ──────────────────────────────────
         "INSERT_CUSTOMER_COMPANY":                  customer_company,
         "P. O. Box INSERT_CUSTOMER_PO_BOX_NUM":     po_box_full,
         "INSERT_CUSTOMER_CITY_FULL":                customer_city,
         "INSERT_CUSTOMER_ATTN":                     f"Kind Attn: {customer_attn}",
         "INSERT_CUSTOMER_TEL_LINE":                 tel_str,
         "INSERT_CUSTOMER_FAX_LINE":                 fax_str,
-        "INSERT_CUSTOMER_MOB_LINE":                 mob_str,          # Budgetary only
-        # ── Sender block ─────────────────────────────────────
+        "INSERT_CUSTOMER_MOB_LINE":                 mob_str,
         "INSERT_SENDER_NAME":                       sender_name,
         "INSERT_SENDER_DEPT":                       sender_dept,
         "INSERT_SENDER_MOBILE":                     sender_mobile,
         "INSERT_SENDER_EMAIL":                      sender_email,
-        # ── Header meta ──────────────────────────────────────
         "INSERT_OFFER_DATE":                        offer_date,
         "INSERT_REFERENCE_NO":                      reference_no.strip(),
-        # ── Subject / project ────────────────────────────────
         "INSERT_SUBJECT_FULL":                      subject,
         "INSERT_PROJECT_NAME":                      project_name,
         "INSERT_END_USER":                          end_user,
-        # ── Price block ──────────────────────────────────────
         "INSERT_CURRENCY_FULL":                     currency_full,
         "INSERT_TOTAL_PRICE_NUM":                   total_price_num,
         "INSERT_CURRENCY_CODE":                     currency_code,
-        # Combined price-words run (same text in both templates, different suffix)
-        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":          price_words_run,   # Firm
-        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS Only).":     price_words_run,   # Budgetary
-        # ── Commercial terms ─────────────────────────────────
+        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS).":      price_words_run,
+        "INSERT_CURRENCY_CODE INSERT_TOTAL_PRICE_WORDS Only).": price_words_run,
         "INSERT_INCOTERM_NAME":                     incoterm_name,
         "INSERT_DELIVERY_MONTHS":                   f"{delivery_months} month(s)",
         "INSERT_WARRANTY_MONTHS":                   f"{warranty_months} months",
         "INSERT_PAYMENT_OPTION_HEADER":             pay_header,
-        "INSERT_PAYMENT_OPTION_LINE":               pay_lines,        # Firm  (singular)
-        "INSERT_PAYMENT_OPTION_LINES":              pay_lines,        # Budgetary (plural)
-        # ── Firm-only ────────────────────────────────────────
+        "INSERT_PAYMENT_OPTION_LINE":               pay_lines,
+        "INSERT_PAYMENT_OPTION_LINES":              pay_lines,
         "INSERT_MFC_DATE":                          mfc_date if is_firm else "",
         "INSERT_IMPORT_PORT_SENTENCE":              import_port_sentence,
         "INSERT_OFFER_VALIDITY":                    offer_validity if is_firm else "",
@@ -466,23 +501,16 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     doc = Document(filepath)
 
     # ════════════════════════════════════════════════════════
-    # PASS 1 — Highlighted runs (standard tags)
-    # Strategy:
-    #   a) Collect all highlighted runs in the paragraph
-    #   b) Merge adjacent highlighted runs whose combined text is a known key
-    #   c) Replace any run whose stripped text matches a key exactly
-    #   d) For runs that still contain INSERT_ fragments, do regex sub
+    # PASS 1 — Highlighted runs
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         all_runs = para.runs
-        # Merge ALL adjacent highlighted runs first (handles split email & others)
         i = 0
         while i < len(all_runs) - 1:
             ri  = all_runs[i]
             ri1 = all_runs[i + 1]
             if ri.font.highlight_color is not None and ri1.font.highlight_color is not None:
                 combined = (ri.text or "") + (ri1.text or "")
-                # Only merge if combined is a known key OR either piece has INSERT_
                 if combined.strip() in replacements or (
                     "INSERT_" in (ri.text or "") and "INSERT_" in (ri1.text or "")
                 ):
@@ -490,11 +518,9 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                     ri1.text = ""
                     clear_highlight(ri1)
                     ri1.font.highlight_color = None
-                    # Re-check same index (in case of triple split)
                     continue
             i += 1
 
-        # Now replace
         for r in all_runs:
             if not r.text:
                 continue
@@ -502,7 +528,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             if key in replacements:
                 fill(r, replacements[key])
             elif r.font.highlight_color is not None and "INSERT_" in r.text:
-                # Regex sub for any remaining INSERT_ tokens inside a run
                 new_text = re.sub(
                     r"INSERT_\w+",
                     lambda m: replacements.get(m.group(0), ""),
@@ -511,13 +536,9 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 fill(r, new_text)
 
     # ════════════════════════════════════════════════════════
-    # PASS 2 — Non-highlighted runs that carry INSERT_ tags
-    # Covers: INSERT_INCOTERM_NAME, INSERT_DELIVERY_MONTHS,
-    #         INSERT_OFFER_VALIDITY  (no highlight in Firm template)
-    #         INSERT_DELIVERY_MONTHS split across runs in Budgetary
+    # PASS 2 — Non-highlighted INSERT_ runs
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
-        # Merge adjacent non-highlighted runs that together form a key
         all_runs = para.runs
         i = 0
         while i < len(all_runs) - 1:
@@ -549,9 +570,7 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                     clear_highlight(r)
 
     # ════════════════════════════════════════════════════════
-    # PASS 3 — Budgetary: strip the stray "{" before the price line
-    # Template has: ": {INSERT_CURRENCY_FULL ..."
-    # The "{" is in run[5] with no highlight — just clear it.
+    # PASS 3 — Budgetary: strip stray "{"
     # ════════════════════════════════════════════════════════
     if not is_firm:
         for para in all_paras(doc):
@@ -563,9 +582,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
 
     # ════════════════════════════════════════════════════════
     # PASS 4 — Scope tables
-    # Table[0] = header/info table (skip)
-    # Table[1] = scope of supply
-    # Table[2] = optional items (if present)
     # ════════════════════════════════════════════════════════
     if len(doc.tables) > 1:
         fill_table(doc.tables[1], scope_items)
@@ -574,7 +590,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
 
     # ════════════════════════════════════════════════════════
     # PASS 5 — Final safety sweep
-    # Remove any leftover INSERT_ tokens and clear all highlights
     # ════════════════════════════════════════════════════════
     for para in all_paras(doc):
         for r in para.runs:
