@@ -632,18 +632,3 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             use_container_width=True
         )
-'''
-
-import ast
-try:
-    ast.parse(app_code)
-    print("✅ Syntax OK")
-except SyntaxError as e:
-    print(f"❌ SyntaxError at line {e.lineno}: {e.msg}")
-    print(f"   Text: {e.text}")
-
-with open('/tmp/app.py', 'w', encoding='utf-8') as f:
-    f.write(app_code)
-
-print(f"Lines: {len(app_code.splitlines())}")
-print(f"Chars: {len(app_code)}")
