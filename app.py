@@ -1,4 +1,4 @@
-import streamlit as st
+app_py = '''import streamlit as st
 import shutil
 from docx import Document
 from docx.shared import Pt
@@ -6,23 +6,27 @@ from datetime import datetime
 import os
 import re
 
-st.set_page_config(page_title="Siemens Offer Letter Generator", page_icon="⚡", layout="wide")
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = os.path.join(BASE_DIR, "output")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+st.set_page_config(page_title="Siemens Offer Letter Generator", page_icon="\u26a1", layout="wide")
 
 st.markdown("""
-<style>
+&lt;style&gt;
     .main-header { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.2rem; }
     .section-header { font-size: 1.3rem; font-weight: 600; color: #16213e; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-    .stRadio > div { flex-direction: row; gap: 2rem; }
+    .stRadio &gt; div { flex-direction: row; gap: 2rem; }
     hr { margin: 1rem 0; }
-</style>
+&lt;/style&gt;
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-header">⚡ Siemens Offer Letter Generator</div>', unsafe_allow_html=True)
+st.markdown(\'&lt;div class="main-header"&gt;\u26a1 Siemens Offer Letter Generator&lt;/div&gt;\', unsafe_allow_html=True)
 st.markdown("---")
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # HELPER FUNCTIONS
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
 def number_to_words(n):
     ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
@@ -33,15 +37,15 @@ def number_to_words(n):
     def helper(num):
         if num == 0:
             return ""
-        elif num < 20:
+        elif num &lt; 20:
             return ones[num]
-        elif num < 100:
+        elif num &lt; 100:
             return tens[num // 10] + (" " + ones[num % 10] if num % 10 != 0 else "")
-        elif num < 1000:
+        elif num &lt; 1000:
             return ones[num // 100] + " Hundred" + (" " + helper(num % 100) if num % 100 != 0 else "")
-        elif num < 1_000_000:
+        elif num &lt; 1_000_000:
             return helper(num // 1000) + " Thousand" + (" " + helper(num % 1000) if num % 1000 != 0 else "")
-        elif num < 1_000_000_000:
+        elif num &lt; 1_000_000_000:
             return helper(num // 1_000_000) + " Million" + (" " + helper(num % 1_000_000) if num % 1_000_000 != 0 else "")
         else:
             return helper(num // 1_000_000_000) + " Billion" + (" " + helper(num % 1_000_000_000) if num % 1_000_000_000 != 0 else "")
@@ -55,15 +59,12 @@ def number_to_words(n):
     except:
         return ""
 
-
 def hl_runs(para):
     return [r for r in para.runs if r.font.highlight_color is not None]
-
 
 def fill(run, text):
     run.text = text
     run.font.highlight_color = None
-
 
 def all_paras(doc):
     from docx.text.paragraph import Paragraph
@@ -78,15 +79,14 @@ def all_paras(doc):
                     for p in cell.paragraphs:
                         yield p
 
-
 def fill_table(table, items):
     for ri, item in enumerate(items):
-        while ri + 1 >= len(table.rows):
+        while ri + 1 &gt;= len(table.rows):
             table.add_row()
         row = table.rows[ri + 1]
         vals = [item.get("no", str(ri + 1)), item.get("desc", ""), item.get("qty", ""), item.get("total", "")]
         for ci, val in enumerate(vals):
-            if ci < len(row.cells):
+            if ci &lt; len(row.cells):
                 p = row.cells[ci].paragraphs[0]
                 if p.runs:
                     p.runs[0].text = val
@@ -95,31 +95,28 @@ def fill_table(table, items):
                     r2.font.name = "Arial"
                     r2.font.size = Pt(9)
 
-
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # SECTION 1 - OFFER TYPE
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">Offer Type</div>', unsafe_allow_html=True)
+st.markdown(\'&lt;div class="section-header"&gt;Offer Type&lt;/div&gt;\', unsafe_allow_html=True)
 offer_type = st.radio("", ["Firm", "Budgetary"], horizontal=True, label_visibility="collapsed")
 is_firm = (offer_type == "Firm")
-is_budgetary = (offer_type == "Budgetary")
 
 st.markdown("---")
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # SECTION 2 - CUSTOMER INFORMATION
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">📋 Customer Information</div>', unsafe_allow_html=True)
+st.markdown(\'&lt;div class="section-header"&gt;\U0001f4cb Customer Information&lt;/div&gt;\', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
-
 with col1:
     company_options = [
         "Electro Mechanical Co. LLC (ELMEC)",
         "ADNOC",
-        "Nofal for Trade & Agencies",
+        "Nofal for Trade &amp; Agencies",
         "Siemens Energy LLC",
         "Other"
     ]
@@ -150,16 +147,11 @@ with col5:
 with col6:
     customer_fax = st.text_input("Fax (or leave blank)")
 
-# Tel and Mobile row — Tel always in col7; Mobile shown in col8 for Budgetary only
 col7, col8 = st.columns(2)
 with col7:
-    customer_tel = st.text_input("Tel (e.g. +971 2 6262 800 Ext:33, or leave blank)")
+    customer_tel = st.text_input("Tel (e.g. +971 2 6262 800, or leave blank)")
 with col8:
-    if is_budgetary:
-        customer_mob = st.text_input("Mobile (or leave blank)")
-    else:
-        customer_mob = ""
-        st.empty()  # keeps layout balanced for Firm
+    customer_mob = st.text_input("Mobile (or leave blank)")
 
 col9, col10 = st.columns(2)
 with col9:
@@ -180,11 +172,11 @@ is_national = (customer_type == "National")
 
 st.markdown("---")
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # SECTION 3 - OFFER DETAILS
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">📝 Offer Details</div>', unsafe_allow_html=True)
+st.markdown(\'&lt;div class="section-header"&gt;\U0001f4dd Offer Details&lt;/div&gt;\', unsafe_allow_html=True)
 
 subject = st.text_input("Subject (e.g. 33KV Switchgear Supply)")
 project_name = st.text_input("Project Name")
@@ -192,11 +184,11 @@ end_user = st.text_input("End User")
 
 st.markdown("---")
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # SECTION 4 - COMMERCIAL TERMS
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">💰 Commercial Terms</div>', unsafe_allow_html=True)
+st.markdown(\'&lt;div class="section-header"&gt;\U0001f4b0 Commercial Terms&lt;/div&gt;\', unsafe_allow_html=True)
 
 col_c1, col_c2 = st.columns(2)
 with col_c1:
@@ -271,12 +263,12 @@ else:
 
 st.markdown("---")
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # SECTION 5 - FIRM ONLY FIELDS
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
 if is_firm:
-    st.markdown('<div class="section-header">🏗️ Firm Offer Details</div>', unsafe_allow_html=True)
+    st.markdown(\'&lt;div class="section-header"&gt;\U0001f3d7\ufe0f Firm Offer Details&lt;/div&gt;\', unsafe_allow_html=True)
 
     install_options = {
         "UAE - Abu Dhabi (Dubai or Northern Emirates)": "the Emirate of Abu Dhabi (Dubai or Northern Emirates)",
@@ -317,11 +309,11 @@ else:
     offer_validity = ""
     signatories = ""
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # SECTION 6 - SENDER / SALES CONTACT
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">👤 Sales Contact</div>', unsafe_allow_html=True)
+st.markdown(\'&lt;div class="section-header"&gt;\U0001f464 Sales Contact&lt;/div&gt;\', unsafe_allow_html=True)
 
 sales_contacts = {
     "Ahmad Awny | RC-AE SI EA S VD-V-D | +971 55 2003541 | ahmad.awny@siemens.com": {
@@ -361,12 +353,12 @@ else:
 
 st.markdown("---")
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # SECTION 7 - SCOPE OF SUPPLY
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
-st.markdown('<div class="section-header">📦 Scope of Supply</div>', unsafe_allow_html=True)
-st.caption("Enter each line item below. Format: Description | Qty | Total Price")
+st.markdown(\'&lt;div class="section-header"&gt;\U0001f4e6 Scope of Supply&lt;/div&gt;\', unsafe_allow_html=True)
+st.caption("Enter each line item below.")
 
 num_scope = st.number_input("Number of scope items", min_value=1, max_value=20, value=1, step=1)
 scope_items = []
@@ -374,11 +366,11 @@ for i in range(int(num_scope)):
     st.markdown(f"**Item {i+1}**")
     col_sc1, col_sc2, col_sc3 = st.columns([4, 1, 2])
     with col_sc1:
-        desc = st.text_input(f"Description", key=f"scope_desc_{i}")
+        desc = st.text_input("Description", key=f"scope_desc_{i}")
     with col_sc2:
-        qty = st.text_input(f"Qty", key=f"scope_qty_{i}")
+        qty = st.text_input("Qty", key=f"scope_qty_{i}")
     with col_sc3:
-        total = st.text_input(f"Total Price", key=f"scope_total_{i}")
+        total = st.text_input("Total Price", key=f"scope_total_{i}")
     scope_items.append({"no": str(i+1), "desc": desc, "qty": qty, "total": total})
 
 st.markdown("**Optional Items** (leave blank if none)")
@@ -388,22 +380,21 @@ for i in range(int(num_opt)):
     st.markdown(f"**Optional Item {i+1}**")
     col_o1, col_o2, col_o3 = st.columns([4, 1, 2])
     with col_o1:
-        odesc = st.text_input(f"Description", key=f"opt_desc_{i}")
+        odesc = st.text_input("Description", key=f"opt_desc_{i}")
     with col_o2:
-        oqty = st.text_input(f"Qty", key=f"opt_qty_{i}")
+        oqty = st.text_input("Qty", key=f"opt_qty_{i}")
     with col_o3:
-        ototal = st.text_input(f"Total Price", key=f"opt_total_{i}")
+        ototal = st.text_input("Total Price", key=f"opt_total_{i}")
     optional_items.append({"no": str(i+1), "desc": odesc, "qty": oqty, "total": ototal})
 
 st.markdown("---")
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # GENERATE BUTTON
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 
-if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=True):
+if st.button("\U0001f680 Generate Offer Letter", type="primary", use_container_width=True):
 
-    # Validation
     errors = []
     if not customer_company or customer_company == "Other":
         errors.append("Customer Company")
@@ -425,26 +416,24 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         errors.append("Offer Validity")
 
     if errors:
-        st.error(f"Please fill in the following required fields: {', '.join(errors)}")
+        st.error(f"Please fill in the following required fields: {\', \'.join(errors)}")
         st.stop()
 
-    # Derived values
-    customer_city = f"{customer_city_input}, {country}"
+    customer_city     = f"{customer_city_input}, {country}"
     total_price_words = number_to_words(total_price_num)
 
-    # Payment text
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
+            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\\n"
             f"80% of the contract value payable against presentation of shipping documents within {payment_days} days."
         )
     elif payment_option == "B":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
-            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
-            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
+            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\\n"
+            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\\n"
+            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\\n"
             f"50% of the contract value against Bill of Lading, payable within {payment_days} days."
         )
     else:
@@ -456,14 +445,12 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         if is_firm and import_port else ""
     )
 
-    # Format customer contact fields
-    po_box_str  = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
-    tel_str     = f"Tel : {customer_tel}"         if customer_tel.strip()     else ""
-    fax_str     = f"Fax: {customer_fax}"          if customer_fax.strip()     else ""
-    mob_str     = f"Mob: {customer_mob}"          if customer_mob.strip()     else ""
-    ref_str     = reference_no.strip()
+    po_box_str = f"P. O. Box {customer_po_box}" if customer_po_box.strip() else ""
+    tel_str    = f"Tel : {customer_tel}"         if customer_tel.strip()     else ""
+    fax_str    = f"Fax: {customer_fax}"          if customer_fax.strip()     else ""
+    mob_str    = f"Mob: {customer_mob}"          if customer_mob.strip()     else ""
+    ref_str    = reference_no.strip()
 
-    # Replacement map
     replacements = {
         "INSERT_CUSTOMER_COMPANY":      customer_company,
         "INSERT_CUSTOMER_PO_BOX":       po_box_str,
@@ -496,8 +483,8 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         "INSERT_OFFER_VALIDITY":        offer_validity if is_firm else "",
     }
 
-    # File setup
-    TEMPLATE_PATH = "template_Firm_FIXED.docx" if is_firm else "template_Budgetary_FIXED.docx"
+    TEMPLATE_PATH = os.path.join(BASE_DIR, "template_Firm_FIXED.docx") if is_firm \\
+               else os.path.join(BASE_DIR, "template_Budgetary_FIXED.docx")
 
     offer_short = "FIRM" if is_firm else "BUD"
     cust_short  = customer_company.split()[0].upper().strip(".,")
@@ -508,12 +495,11 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     except:
         date_str = offer_date.replace(" ", "")[:8]
     filename = f"{offer_short}_{cust_short}_{proj_short}_{date_str}_v01.docx"
-    filepath = f"/tmp/{filename}"
+    filepath = os.path.join(OUTPUT_DIR, filename)
 
     shutil.copy(TEMPLATE_PATH, filepath)
     doc = Document(filepath)
 
-    # Apply replacements
     for para in all_paras(doc):
         hrs = hl_runs(para)
         if not hrs:
@@ -529,7 +515,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
             if key in replacements:
                 fill(r, replacements[key])
 
-    # Firm style patches
     if is_firm:
         for para in all_paras(doc):
             if para.text.strip().startswith("The offer currency is"):
@@ -568,7 +553,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         r.text = ""
                 break
 
-    # Cancellation table patch
     if is_firm and is_national:
         national_map = {"5%": "-5%", "45%": "-45%", "90%": "-80%", "100%": "-100%"}
         for para in all_paras(doc):
@@ -578,26 +562,31 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                     if r.text.strip() in national_map:
                         r.text = r.text.replace(r.text.strip(), national_map[r.text.strip()])
 
-    # Scope tables
-    if len(doc.tables) > 1:
+    if len(doc.tables) &gt; 1:
         fill_table(doc.tables[1], scope_items)
-    if optional_items and len(doc.tables) > 2:
+    if optional_items and len(doc.tables) &gt; 2:
         fill_table(doc.tables[2], optional_items)
 
-    # Post-generation cleanup
     for para in all_paras(doc):
         for r in para.runs:
             if r.text and "INSERT_" in r.text:
-                r.text = re.sub(r'INSERT_\w+', "", r.text)
+                r.text = re.sub(r\'INSERT_\\w+\', "", r.text)
 
     doc.save(filepath)
 
-    st.success(f"✅ Offer letter generated successfully!")
+    st.success(f"\u2705 Offer letter generated successfully!")
     with open(filepath, "rb") as f:
         st.download_button(
-            label=f"📥 Download {filename}",
+            label=f"\U0001f4e5 Download {filename}",
             data=f,
             file_name=filename,
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             use_container_width=True
         )
+    st.info(f"\U0001f4c1 File also saved to: output\\\\{filename}")
+'''
+
+with open("/tmp/app.py", "w", encoding="utf-8") as f:
+    f.write(app_py)
+
+print("Done. Lines:", len(app_py.splitlines()))
