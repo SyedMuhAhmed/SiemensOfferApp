@@ -10,14 +10,14 @@ import re
 st.set_page_config(page_title="Siemens Offer Letter Generator", page_icon="⚡", layout="wide")
 
 st.markdown("""
-&lt;style&gt;
+<style>
     .main-header { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.2rem; }
     .section-header { font-size: 1.3rem; font-weight: 600; color: #16213e; margin-top: 1.5rem; margin-bottom: 0.5rem; }
     hr { margin: 1rem 0; }
-&lt;/style&gt;
+</style>
 """, unsafe_allow_html=True)
 
-st.markdown('&lt;div class="main-header"&gt;⚡ Siemens Offer Letter Generator&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="main-header">⚡ Siemens Offer Letter Generator</div>', unsafe_allow_html=True)
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────
@@ -33,15 +33,15 @@ def number_to_words(n):
     def helper(num):
         if num == 0:
             return ""
-        elif num &lt; 20:
+        elif num < 20:
             return ones[num]
-        elif num &lt; 100:
+        elif num < 100:
             return tens[num // 10] + (" " + ones[num % 10] if num % 10 != 0 else "")
-        elif num &lt; 1000:
+        elif num < 1000:
             return ones[num // 100] + " Hundred" + (" " + helper(num % 100) if num % 100 != 0 else "")
-        elif num &lt; 1_000_000:
+        elif num < 1_000_000:
             return helper(num // 1000) + " Thousand" + (" " + helper(num % 1000) if num % 1000 != 0 else "")
-        elif num &lt; 1_000_000_000:
+        elif num < 1_000_000_000:
             return helper(num // 1_000_000) + " Million" + (" " + helper(num % 1_000_000) if num % 1_000_000 != 0 else "")
         else:
             return helper(num // 1_000_000_000) + " Billion" + (" " + helper(num % 1_000_000_000) if num % 1_000_000_000 != 0 else "")
@@ -80,12 +80,12 @@ def all_paras(doc):
 
 def fill_table(table, items):
     for ri, item in enumerate(items):
-        while ri + 1 &gt;= len(table.rows):
+        while ri + 1 >= len(table.rows):
             table.add_row()
         row = table.rows[ri + 1]
         vals = [item.get("no", str(ri+1)), item.get("desc", ""), item.get("qty", ""), item.get("total", "")]
         for ci, val in enumerate(vals):
-            if ci &lt; len(row.cells):
+            if ci < len(row.cells):
                 p = row.cells[ci].paragraphs[0]
                 if p.runs:
                     p.runs[0].text = val
@@ -99,7 +99,7 @@ def replace_multi_placeholder_run(run, replacements):
     def replacer(m):
         key = m.group(0)
         return replacements.get(key, key)
-    new_text = re.sub(r"INSERT_\\w+", replacer, text)
+    new_text = re.sub(r"INSERT_\w+", replacer, text)
     if new_text != text:
         run.text = new_text
         clear_highlight(run)
@@ -109,7 +109,7 @@ def replace_multi_placeholder_run(run, replacements):
 # SECTION 1 - OFFER TYPE
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-header"&gt;Offer Type&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Offer Type</div>', unsafe_allow_html=True)
 offer_type = st.radio("", ["Firm", "Budgetary"], horizontal=True, label_visibility="collapsed")
 is_firm = (offer_type == "Firm")
 is_budgetary = (offer_type == "Budgetary")
@@ -120,7 +120,7 @@ st.markdown("---")
 # SECTION 2 - CUSTOMER INFORMATION
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-header"&gt;📋 Customer Information&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-header">📋 Customer Information</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
@@ -128,7 +128,7 @@ with col1:
     company_options = [
         "Electro Mechanical Co. LLC (ELMEC)",
         "ADNOC",
-        "Nofal for Trade &amp; Agencies",
+        "Nofal for Trade & Agencies",
         "Siemens Energy LLC",
         "Other"
     ]
@@ -192,7 +192,7 @@ st.markdown("---")
 # SECTION 3 - OFFER DETAILS
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-header"&gt;📝 Offer Details&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-header">📝 Offer Details</div>', unsafe_allow_html=True)
 
 subject = st.text_input("Subject (e.g. 33KV Switchgear Supply)")
 project_name = st.text_input("Project Name")
@@ -204,7 +204,7 @@ st.markdown("---")
 # SECTION 4 - COMMERCIAL TERMS
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-header"&gt;💰 Commercial Terms&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-header">💰 Commercial Terms</div>', unsafe_allow_html=True)
 
 col_c1, col_c2 = st.columns(2)
 with col_c1:
@@ -284,7 +284,7 @@ st.markdown("---")
 # ─────────────────────────────────────────────────────────────
 
 if is_firm:
-    st.markdown('&lt;div class="section-header"&gt;🏗️ Firm Offer Details&lt;/div&gt;', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">🏗️ Firm Offer Details</div>', unsafe_allow_html=True)
 
     install_options = {
         "UAE - Abu Dhabi (Dubai or Northern Emirates)": "the Emirate of Abu Dhabi (Dubai or Northern Emirates)",
@@ -338,7 +338,7 @@ else:
 # SECTION 6 - SENDER / SALES CONTACT
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-header"&gt;👤 Sales Contact&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-header">👤 Sales Contact</div>', unsafe_allow_html=True)
 
 sales_contacts = {
     "Ahmad Awny | RC-AE SI EA S VD-V-D | +971 55 2003541 | ahmad.awny@siemens.com": {
@@ -382,7 +382,7 @@ st.markdown("---")
 # SECTION 7 - SCOPE OF SUPPLY
 # ─────────────────────────────────────────────────────────────
 
-st.markdown('&lt;div class="section-header"&gt;📦 Scope of Supply&lt;/div&gt;', unsafe_allow_html=True)
+st.markdown('<div class="section-header">📦 Scope of Supply</div>', unsafe_allow_html=True)
 st.caption("Enter each line item below.")
 
 num_scope = st.number_input("Number of scope items", min_value=1, max_value=20, value=1, step=1)
@@ -450,15 +450,15 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
     if payment_option == "A":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\\n"
+            f"20% of the contract value to be paid as down payment within 15 days after placement of the order.\n"
             f"80% of the contract value payable against presentation of shipping documents within {payment_days} days."
         )
     elif payment_option == "B":
         pay_header = f"Payment terms: {payment_days} days from shipping documents"
         pay_lines  = (
-            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\\n"
-            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\\n"
-            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\\n"
+            f"20% of the contract value to be paid as Advance Payment within 15 days after Order Confirmation.\n"
+            f"10% of the contract value against submission of Drawings (SLD), payable within {payment_days} days.\n"
+            f"20% of the contract value upon Manufacturing Clearance, payable within 45 days.\n"
             f"50% of the contract value against Bill of Lading, payable within {payment_days} days."
         )
     else:
@@ -530,9 +530,8 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
         if not hrs:
             continue
 
-        # Merge split highlighted runs
         i = 0
-        while i &lt; len(hrs) - 1:
+        while i < len(hrs) - 1:
             combined2 = (hrs[i].text or "") + (hrs[i+1].text or "")
             if combined2.strip() in replacements:
                 hrs[i].text = combined2
@@ -541,7 +540,6 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                 hrs[i+1].font.highlight_color = None
             i += 1
 
-        # Replace single or multi-placeholder runs
         for r in hrs:
             key = (r.text or "").strip()
             if key in replacements:
@@ -607,16 +605,16 @@ if st.button("🚀 Generate Offer Letter", type="primary", use_container_width=T
                         r.text = r.text.replace(r.text.strip(), cancel_map[r.text.strip()])
 
     # PASS 5: Scope tables
-    if len(doc.tables) &gt; 1:
+    if len(doc.tables) > 1:
         fill_table(doc.tables[1], scope_items)
-    if optional_items and len(doc.tables) &gt; 2:
+    if optional_items and len(doc.tables) > 2:
         fill_table(doc.tables[2], optional_items)
 
     # PASS 6: Final cleanup
     for para in all_paras(doc):
         for r in para.runs:
             if r.text and "INSERT_" in r.text:
-                r.text = re.sub(r"INSERT_\\w+", "", r.text)
+                r.text = re.sub(r"INSERT_\w+", "", r.text)
             if r.font.highlight_color is not None:
                 clear_highlight(r)
                 r.font.highlight_color = None
